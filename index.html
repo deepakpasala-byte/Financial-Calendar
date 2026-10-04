@@ -425,32 +425,28 @@ function getCumulative(cat) {
 }
 
 function getTotalWithdrawals() {
-  // Only count withdrawals from months UP TO AND INCLUDING current month
-  // (a withdrawal added in a future month doesn't affect current view)
-  let total=0;
-  for (const [y,m] of ALL_PERIODS) {
-    if (y>curYear||(y===curYear&&m>curMonth)) break;
-    const key = getEntryKey(y,m);
-    const monthOwn = customEntries[key] || [];
-    total += monthOwn.filter(e=>e.category==='Withdrawals').reduce((s,e)=>s+e.amount,0);
-  }
-  return total;
+  // Only count withdrawals made in the CURRENT month
+  const key = getEntryKey(curYear, curMonth);
+  const monthOwn = customEntries[key] || [];
+  return monthOwn.filter(e=>e.category==='Withdrawals').reduce((s,e)=>s+e.amount,0);
 }
 
 function getTotalHYSA() {
-  // Sum ALL High Savings from Oct 2026 to current month
-  // Withdrawals only deduct from the month they were added onwards
-  let total=0;
+  // Running balance: each month adds High Savings and subtracts only that month's withdrawals
+  let balance = 0;
   for (const [y,m] of ALL_PERIODS) {
     if (y>curYear||(y===curYear&&m>curMonth)) break;
-    const items=getMonthItems(y,m);
-    total += items.filter(i=>i.category==='High Savings').reduce((s,i)=>s+getAmount(i.id,i.amount),0);
-    // Add custom High Savings entries added in this exact month
+    // Add this month's High Savings
+    const items = getMonthItems(y,m);
+    balance += items.filter(i=>i.category==='High Savings').reduce((s,i)=>s+getAmount(i.id,i.amount),0);
+    // Add custom High Savings entries for this month
     const key = getEntryKey(y,m);
     const monthOwn = customEntries[key] || [];
-    total += monthOwn.filter(e=>e.category==='High Savings').reduce((s,e)=>s+e.amount,0);
+    balance += monthOwn.filter(e=>e.category==='High Savings').reduce((s,e)=>s+e.amount,0);
+    // Subtract only THIS month's withdrawals
+    balance -= monthOwn.filter(e=>e.category==='Withdrawals').reduce((s,e)=>s+e.amount,0);
   }
-  return total;
+  return balance;
 }
 
 function renderSummary() {
@@ -472,8 +468,7 @@ function renderSummary() {
     const sl=document.getElementById('sub-'+cat); if(sl) sl.textContent=subLabel;
   });
   const totalWd=getTotalWithdrawals();
-  const totalHYSA=getTotalHYSA();
-  const netHYSA=totalHYSA-totalWd;
+  const netHYSA=getTotalHYSA();
   document.getElementById('sum-Withdrawals').textContent=fmt(totalWd);
   const netEl=document.getElementById('net-hysa');
   netEl.textContent=(netHYSA<0?'-':'')+fmt(netHYSA);
