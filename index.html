@@ -372,7 +372,25 @@ function fmt(n) { return '$' + Math.abs(Number(n)).toLocaleString(); }
 function getAmount(id, def) { return customAmounts[id] !== undefined ? customAmounts[id] : def; }
 function getMonthItems(y, m) { return ALL_ITEMS.filter(i => i.year===y && i.month===m); }
 function getEntryKey(y, m) { return y+'_'+m; }
-function getMonthEntries(y, m) { return customEntries[getEntryKey(y,m)] || []; }
+function getMonthEntries(y, m) {
+  const key = getEntryKey(y, m);
+  const monthEntries = customEntries[key] || [];
+
+  // Add withdrawals from all previous months (they persist going forward)
+  const withdrawals = [];
+  for (const [k, entries] of Object.entries(customEntries)) {
+    if (k === key) continue; // already included above
+    const [ky, km] = k.split('_').map(Number);
+    // Only include if the entry month is before current month
+    if (ky < y || (ky === y && km < m)) {
+      entries.filter(e => e.category === 'Withdrawals').forEach(e => {
+        withdrawals.push({...e, _fromMonth: k}); // tag so we know it's carried over
+      });
+    }
+  }
+
+  return [...monthEntries, ...withdrawals];
+}
 
 function setYear(y) {
   curYear=y; curMonth=VALID[y][0];
@@ -526,13 +544,15 @@ function saveAmount(){
 function renderAddBox(){
   document.getElementById('addEntryMonth').textContent=MONTHS[curMonth-1]+' '+curYear;
   const entries=getMonthEntries(curYear,curMonth);
-  document.getElementById('addEntryList').innerHTML=entries.map((e,i)=>{
+  document.getElementById('addEntryList').innerHTML=entries.length === 0 ? '' : entries.map((e,i)=>{
     const catClass='cat-'+e.category.replace(' ','-'), isWd=e.category==='Withdrawals';
+    const carriedOver = e._fromMonth;
+    const fromLabel = carriedOver ? ` <span style="font-size:9px;color:#999;font-weight:400">↩ from ${MONTHS[parseInt(e._fromMonth.split('_')[1])-1]}</span>` : '';
     return `<div class="add-entry-item ${isWd?'ae-withdrawal':''}">
-      <div class="ae-label">${e.label}</div>
+      <div class="ae-label">${e.label}${fromLabel}</div>
       <span class="ae-badge ${catClass}">${e.category}</span>
       <div class="ae-amt" style="${!isWd?'color:'+CAT_COLORS[e.category]:''}">${fmt(e.amount)}</div>
-      <button class="ae-del" onclick="deleteEntry(${i})">×</button>
+      <button class="ae-del" onclick="deleteEntry(${i})" title="${carriedOver?'Remove this withdrawal':'Remove'}">×</button>
     </div>`;
   }).join('');
 }
@@ -552,8 +572,24 @@ function addEntry(){
 
 function deleteEntry(idx){
   const key=getEntryKey(curYear,curMonth);
-  if(!customEntries[key])return;
-  customEntries[key].splice(idx,1);
+  const allEntries = getMonthEntries(curYear, curMonth);
+  const entry = allEntries[idx];
+  if (!entry) return;
+
+  // If it's a carried-over withdrawal, delete from its original month
+  if (entry._fromMonth) {
+    const origEntries = customEntries[entry._fromMonth];
+    if (origEntries) {
+      const origIdx = origEntries.findIndex(e => e.label === entry.label && e.amount === entry.amount && e.category === 'Withdrawals');
+      if (origIdx !== -1) origEntries.splice(origIdx, 1);
+    }
+  } else {
+    if(!customEntries[key])return;
+    // Find actual index in the month's own entries
+    const monthOnly = customEntries[key];
+    const monthIdx = monthOnly.findIndex(e => e.label === entry.label && e.amount === entry.amount && e.category === entry.category);
+    if (monthIdx !== -1) monthOnly.splice(monthIdx, 1);
+  }
   schedulePush(); renderAddBox(); renderSummary(); renderBreakdown();
 }
 
