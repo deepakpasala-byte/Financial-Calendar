@@ -425,10 +425,11 @@ function getCumulative(cat) {
 }
 
 function getTotalWithdrawals() {
+  // Only count withdrawals from months UP TO AND INCLUDING current month
+  // (a withdrawal added in a future month doesn't affect current view)
   let total=0;
   for (const [y,m] of ALL_PERIODS) {
     if (y>curYear||(y===curYear&&m>curMonth)) break;
-    // Only count withdrawals added in that specific month (not carried-over ones)
     const key = getEntryKey(y,m);
     const monthOwn = customEntries[key] || [];
     total += monthOwn.filter(e=>e.category==='Withdrawals').reduce((s,e)=>s+e.amount,0);
@@ -437,14 +438,14 @@ function getTotalWithdrawals() {
 }
 
 function getTotalHYSA() {
-  // Sum ALL High Savings amounts (checked or not) from Oct 2026 to current month
+  // Sum ALL High Savings from Oct 2026 to current month
+  // Withdrawals only deduct from the month they were added onwards
   let total=0;
   for (const [y,m] of ALL_PERIODS) {
     if (y>curYear||(y===curYear&&m>curMonth)) break;
     const items=getMonthItems(y,m);
-    const entries=getMonthEntries(y,m);
     total += items.filter(i=>i.category==='High Savings').reduce((s,i)=>s+getAmount(i.id,i.amount),0);
-    // Also add custom High Savings entries for that month
+    // Add custom High Savings entries added in this exact month
     const key = getEntryKey(y,m);
     const monthOwn = customEntries[key] || [];
     total += monthOwn.filter(e=>e.category==='High Savings').reduce((s,e)=>s+e.amount,0);
