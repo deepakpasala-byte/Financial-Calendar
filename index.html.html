@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Financial Calendar 2026-2027</title>
+<style>
+  :root {
+    --bg:#F8F7F5; --card:#fff; --border:#E2DDD8; --header:#1C1C1C;
+    --purple:#6A4C93; --text:#1C1C1C; --muted:#888;
+    --exp-bg:#E8D5F0; --exp-fg:#6A4C93;
+    --inv-bg:#D5E8F0; --inv-fg:#2C6E8A;
+    --ind-bg:#FFE8CC; --ind-fg:#B05A00;
+    --hs-bg:#C8E6C0;  --hs-fg:#2E7D32;
+    --wd-bg:#FDDEDE;  --wd-fg:#C0392B;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:env(safe-area-inset-bottom,0px); }
+
+  .app-header { background:var(--header); color:white; padding:18px 20px 14px; position:sticky; top:0; z-index:100; padding-top:calc(18px + env(safe-area-inset-top,0px)); }
+  .app-header h1 { font-size:20px; font-weight:700; letter-spacing:1px; }
+  .header-row { display:flex; align-items:center; justify-content:space-between; }
+  .sync-btn { background:none; border:1.5px solid #555; color:#aaa; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; }
+  .sync-btn:hover { border-color:#aaa; color:white; }
+  .sync-status { font-size:10px; color:#aaa; margin-top:4px; }
+  .sync-status.syncing { color:#F0B429; }
+  .sync-status.synced { color:#3A7D44; }
+  .sync-status.error { color:#C0392B; }
+
+  /* Setup modal */
+  .setup-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:200; padding:20px; }
+  .setup-box { background:white; border-radius:20px; padding:28px 24px; width:100%; max-width:400px; }
+  .setup-box h2 { font-size:18px; font-weight:800; margin-bottom:6px; }
+  .setup-box p { font-size:13px; color:#666; margin-bottom:16px; line-height:1.5; }
+  .setup-box ol { font-size:12px; color:#555; padding-left:18px; margin-bottom:16px; line-height:1.8; }
+  .setup-box input { width:100%; border:2px solid var(--border); border-radius:10px; padding:10px 12px; font-size:13px; outline:none; margin-bottom:12px; }
+  .setup-box input:focus { border-color:var(--purple); }
+  .setup-btn { width:100%; background:var(--purple); color:white; border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:8px; }
+  .setup-skip { width:100%; background:#F0EDE8; color:var(--text); border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; }
+
+  .year-tabs { display:flex; background:#111; border-bottom:1px solid #333; }
+  .year-tab { flex:1; padding:10px; text-align:center; font-size:13px; font-weight:700; color:#666; cursor:pointer; border-bottom:3px solid transparent; }
+  .year-tab.active { color:#C8E6C0; border-bottom-color:#C8E6C0; }
+
+  .month-tabs { display:flex; overflow-x:auto; background:#2a2a2a; padding:0 8px; gap:2px; scrollbar-width:none; }
+  .month-tabs::-webkit-scrollbar { display:none; }
+  .month-tab { flex-shrink:0; padding:10px 14px; font-size:12px; font-weight:600; color:#aaa; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; }
+  .month-tab.active { color:#C8E6C0; border-bottom-color:#C8E6C0; }
+  .month-tab.has-checked { color:#fff; }
+  .month-tab.disabled { opacity:0.3; pointer-events:none; }
+
+  .summary-bar { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:12px 12px 0; }
+  .summary-card { border-radius:10px; padding:10px 8px; text-align:center; }
+  .summary-card.expenses { background:var(--exp-bg); }
+  .summary-card.investment { background:var(--inv-bg); }
+  .summary-card.india { background:var(--ind-bg); }
+  .summary-card.hysa { background:var(--hs-bg); }
+  .summary-card.withdrawals { background:var(--wd-bg); grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
+  .s-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; opacity:0.7; }
+  .s-amount { font-size:14px; font-weight:800; margin-top:2px; }
+  .s-sub { font-size:9px; opacity:0.6; margin-top:1px; }
+  .summary-card.expenses .s-amount { color:var(--exp-fg); }
+  .summary-card.investment .s-amount { color:var(--inv-fg); }
+  .summary-card.india .s-amount { color:var(--ind-fg); }
+  .summary-card.hysa .s-amount { color:var(--hs-fg); }
+  .summary-card.withdrawals .s-amount { color:var(--wd-fg); }
+  .wd-right { text-align:right; }
+  .wd-right .s-amount { color:var(--hs-fg); }
+
+  .add-entry-box { margin:12px 12px 0; background:white; border-radius:14px; border:1.5px solid var(--border); padding:14px; }
+  .add-entry-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:10px; }
+  .add-entry-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .add-entry-label, .add-entry-amount, .add-entry-cat { border:1.5px solid var(--border); border-radius:8px; padding:9px 10px; font-size:13px; font-weight:600; outline:none; background:#FAFAF8; }
+  .add-entry-label { flex:1; min-width:100px; }
+  .add-entry-amount { width:90px; }
+  .add-entry-cat { flex:1; min-width:120px; cursor:pointer; }
+  .add-entry-label:focus, .add-entry-amount:focus, .add-entry-cat:focus { border-color:var(--purple); background:white; }
+  .add-entry-btn { background:var(--purple); color:white; border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; }
+  .add-entry-list { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .add-entry-item { display:flex; align-items:center; gap:8px; background:#F8F7F5; border-radius:8px; padding:8px 10px; }
+  .add-entry-item.ae-withdrawal { background:#FDDEDE; border-left:3px solid var(--wd-fg); }
+  .ae-label { flex:1; font-size:13px; font-weight:600; }
+  .ae-badge { font-size:9px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; }
+  .ae-amt { font-size:14px; font-weight:800; }
+  .ae-withdrawal .ae-amt::before { content:"-"; color:var(--wd-fg); }
+  .ae-withdrawal .ae-amt { color:var(--wd-fg); }
+  .ae-del { background:none; border:none; cursor:pointer; color:#ccc; font-size:18px; padding:0 4px; }
+  .ae-del:hover { color:#e74c3c; }
+
+  .cat-Expenses { background:var(--exp-bg); color:var(--exp-fg); }
+  .cat-Investment { background:var(--inv-bg); color:var(--inv-fg); }
+  .cat-India { background:var(--ind-bg); color:var(--ind-fg); }
+  .cat-High-Savings { background:var(--hs-bg); color:var(--hs-fg); }
+  .cat-Withdrawals { background:var(--wd-bg); color:var(--wd-fg); }
+
+  .breakdown-section { padding:12px 12px 0; }
+  .breakdown-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:8px; }
+  .breakdown-list { background:var(--card); border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+  .breakdown-row { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #F0EDE8; gap:10px; }
+  .breakdown-row:last-child { border-bottom:none; }
+  .breakdown-cat { display:flex; align-items:center; gap:10px; min-width:100px; }
+  .breakdown-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+  .breakdown-cat-name { font-size:13px; font-weight:600; }
+  .breakdown-progress-wrap { flex:1; height:6px; background:#eee; border-radius:3px; overflow:hidden; }
+  .breakdown-progress-bar { height:100%; border-radius:3px; transition:width 0.4s; }
+  .breakdown-amounts { text-align:right; flex-shrink:0; }
+  .breakdown-checked { font-size:14px; font-weight:800; }
+  .breakdown-total { font-size:10px; color:var(--muted); }
+
+  .calendar-section { padding:12px; }
+  .day-group { background:var(--card); border-radius:12px; margin-bottom:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06); border:1px solid var(--border); }
+  .day-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:#F5F3F0; border-bottom:1px solid var(--border); }
+  .day-label { font-size:14px; font-weight:700; }
+  .day-sub { font-size:11px; color:var(--muted); }
+  .day-dot { width:8px; height:8px; border-radius:50%; background:#2E7D32; }
+  .item-row { display:flex; align-items:center; padding:11px 14px; border-bottom:1px solid #F0EDE8; gap:12px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .item-row:last-child { border-bottom:none; }
+  .item-row.checked { background:#F9FFF9; }
+  .item-row.checked .item-label { text-decoration:line-through; color:var(--muted); }
+  .item-row.checked .item-amount { color:var(--muted); }
+  .cb-wrap { width:22px; height:22px; flex-shrink:0; border:2px solid #ccc; border-radius:6px; display:flex; align-items:center; justify-content:center; background:white; transition:all 0.15s; }
+  .item-row.checked .cb-wrap { background:#2E7D32; border-color:#2E7D32; }
+  .cb-wrap svg { display:none; }
+  .item-row.checked .cb-wrap svg { display:block; }
+  .item-info { flex:1; min-width:0; }
+  .item-label { font-size:14px; font-weight:600; }
+  .item-cat-badge { display:inline-block; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; padding:2px 6px; border-radius:4px; margin-top:3px; }
+  .item-amount { font-size:15px; font-weight:800; white-space:nowrap; cursor:pointer; border-radius:6px; padding:2px 6px; }
+  .item-amount:hover { background:#F0EDE8; }
+
+  .modal-wrap { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:999; }
+  .modal-box { background:white; border-radius:16px; padding:24px 20px; width:280px; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+  .modal-box h3 { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .modal-box p { font-size:12px; color:var(--muted); margin-bottom:16px; }
+  .modal-box input { width:100%; border:2px solid var(--border); border-radius:10px; padding:10px 12px; font-size:18px; font-weight:700; outline:none; margin-bottom:16px; }
+  .modal-box input:focus { border-color:var(--purple); }
+  .modal-btns { display:flex; gap:8px; }
+  .modal-btns button { flex:1; padding:10px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; }
+  .btn-cancel { background:#F0EDE8; color:var(--text); }
+  .btn-save { background:var(--purple); color:white; }
+
+  .spinner { display:inline-block; width:10px; height:10px; border:2px solid #555; border-top-color:#aaa; border-radius:50%; animation:spin 0.6s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Setup Modal -->
+<div class="setup-overlay" id="setupOverlay" style="display:none">
+  <div class="setup-box">
+    <h2>Connect Google Sheets</h2>
+    <p>Sync your calendar data across all devices. You only need to set this up once.</p>
+    <ol>
+      <li>Open your Google Sheet</li>
+      <li>Click <strong>Extensions → Apps Script</strong></li>
+      <li>Paste the Apps Script code (from the JS file)</li>
+      <li>Click <strong>Deploy → New Deployment → Web App</strong></li>
+      <li>Set access to <strong>"Anyone"</strong> → Deploy</li>
+      <li>Copy the Web App URL and paste below</li>
+    </ol>
+    <input type="url" id="sheetUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+    <button class="setup-btn" onclick="connectSheet()">Connect & Sync</button>
+    <button class="setup-skip" onclick="skipSetup()">Use Offline (localStorage only)</button>
+  </div>
+</div>
+
+<div class="app-header">
+  <div class="header-row">
+    <h1>FINANCIAL CALENDAR</h1>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="sync-btn" onclick="manualSync()" title="Sync now">
+        <span id="syncIcon">☁️</span> Sync
+      </button>
+      <button class="sync-btn" onclick="openSettings()" title="Google Sheets settings">⚙️</button>
+    </div>
+  </div>
+  <div class="sync-status" id="syncStatus">Oct 2026 – Dec 2027</div>
+</div>
+
+<div class="year-tabs">
+  <div class="year-tab active" id="ytab2026" onclick="setYear(2026)">2026</div>
+  <div class="year-tab" id="ytab2027" onclick="setYear(2027)">2027</div>
+</div>
+
+<div class="month-tabs" id="monthTabs"></div>
+
+<div class="summary-bar">
+  <div class="summary-card expenses"><div class="s-label">Expenses</div><div class="s-amount" id="sum-Expenses">$0</div><div class="s-sub" id="sub-Expenses">of $0</div></div>
+  <div class="summary-card investment"><div class="s-label">Investment</div><div class="s-amount" id="sum-Investment">$0</div><div class="s-sub" id="sub-Investment">of $0 YTD</div></div>
+  <div class="summary-card india"><div class="s-label">India</div><div class="s-amount" id="sum-India">$0</div><div class="s-sub" id="sub-India">of $0</div></div>
+  <div class="summary-card hysa"><div class="s-label">High Savings</div><div class="s-amount" id="sum-High Savings">$0</div><div class="s-sub" id="sub-High Savings">of $0 YTD</div></div>
+  <div class="summary-card withdrawals">
+    <div class="wd-left"><div class="s-label">Withdrawals from HYSA</div><div class="s-amount" id="sum-Withdrawals">$0</div></div>
+    <div class="wd-right"><div class="s-label">Net HYSA Balance</div><div class="s-amount" id="net-hysa">$0</div></div>
+  </div>
+</div>
+
+<div class="add-entry-box">
+  <div class="add-entry-title">Add Entry — <span id="addEntryMonth"></span></div>
+  <div class="add-entry-row">
+    <input class="add-entry-label" id="aeLabel" placeholder="Label (e.g. Car Repair)" />
+    <input class="add-entry-amount" id="aeAmount" type="number" placeholder="$0" min="0" />
+    <select class="add-entry-cat" id="aeCat">
+      <option value="Expenses">Expenses</option>
+      <option value="Investment">Investment</option>
+      <option value="India">India</option>
+      <option value="High Savings">High Savings</option>
+      <option value="Withdrawals">Withdrawal (from HYSA)</option>
+    </select>
+    <button class="add-entry-btn" onclick="addEntry()">Add</button>
+  </div>
+  <div class="add-entry-list" id="addEntryList"></div>
+</div>
+
+<div class="breakdown-section">
+  <div class="breakdown-title">Checked vs Total</div>
+  <div class="breakdown-list" id="breakdownList"></div>
+</div>
+
+<div class="calendar-section" id="calendarSection"></div>
+
+<div class="modal-wrap" id="amountModal" style="display:none" onclick="closeModal(event)">
+  <div class="modal-box">
+    <h3 id="modalLabel">Edit Amount</h3>
+    <p>Press Enter or tap Save to confirm.</p>
+    <input type="number" id="modalInput" min="0" step="1"/>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('amountModal').style.display='none'">Cancel</button>
+      <button class="btn-save" onclick="saveAmount()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const CATS = ['Expenses','Investment','India','High Savings'];
+const CAT_COLORS = {'Expenses':'#6A4C93','Investment':'#2C6E8A','India':'#B05A00','High Savings':'#2E7D32','Withdrawals':'#C0392B'};
+const VALID = {2026:[10,11,12], 2027:[1,2,3,4,5,6,7,8,9,10,11,12]};
+const ALL_PERIODS = [[2026,10],[2026,11],[2026,12],[2027,1],[2027,2],[2027,3],[2027,4],[2027,5],[2027,6],[2027,7],[2027,8],[2027,9],[2027,10],[2027,11],[2027,12]];
+const ALL_ITEMS = [{"id": "m202610d1_Rent", "year": 2026, "month": 10, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m202610d1_Utilities", "year": 2026, "month": 10, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m202610d1_Charging", "year": 2026, "month": 10, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m202610d3_Car_EMI", "year": 2026, "month": 10, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m202610d8_Car_Wash", "year": 2026, "month": 10, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m202610d8_pay0_India", "year": 2026, "month": 10, "day": 8, "label": "India", "category": "India", "amount": 1250}, {"id": "m202610d8_pay0_HYSA", "year": 2026, "month": 10, "day": 8, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m202610d8_pay0_Cap_One", "year": 2026, "month": 10, "day": 8, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202610d8_pay0_Chase_S", "year": 2026, "month": 10, "day": 8, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202610d14_Fidelity", "year": 2026, "month": 10, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m202610d15_Claude", "year": 2026, "month": 10, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m202610d22_pay1_HYSA", "year": 2026, "month": 10, "day": 22, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m202610d22_pay1_Cap_One", "year": 2026, "month": 10, "day": 22, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202610d22_pay1_Chase_S", "year": 2026, "month": 10, "day": 22, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202610d24_ChatGPT", "year": 2026, "month": 10, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m202610d30_Car_Insurance", "year": 2026, "month": 10, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202611d1_Rent", "year": 2026, "month": 11, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m202611d1_Utilities", "year": 2026, "month": 11, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m202611d1_Charging", "year": 2026, "month": 11, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m202611d3_Car_EMI", "year": 2026, "month": 11, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m202611d5_pay0_India", "year": 2026, "month": 11, "day": 5, "label": "India", "category": "India", "amount": 1250}, {"id": "m202611d5_pay0_HYSA", "year": 2026, "month": 11, "day": 5, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m202611d5_pay0_Cap_One", "year": 2026, "month": 11, "day": 5, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202611d5_pay0_Chase_S", "year": 2026, "month": 11, "day": 5, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202611d8_Car_Wash", "year": 2026, "month": 11, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m202611d14_Fidelity", "year": 2026, "month": 11, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m202611d15_Claude", "year": 2026, "month": 11, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m202611d19_pay1_HYSA", "year": 2026, "month": 11, "day": 19, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m202611d19_pay1_Cap_One", "year": 2026, "month": 11, "day": 19, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202611d19_pay1_Chase_S", "year": 2026, "month": 11, "day": 19, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202611d24_ChatGPT", "year": 2026, "month": 11, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m202611d30_Car_Insurance", "year": 2026, "month": 11, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202612d1_Rent", "year": 2026, "month": 12, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m202612d1_Utilities", "year": 2026, "month": 12, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m202612d1_Charging", "year": 2026, "month": 12, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m202612d3_Car_EMI", "year": 2026, "month": 12, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m202612d3_pay0_India", "year": 2026, "month": 12, "day": 3, "label": "India", "category": "India", "amount": 1250}, {"id": "m202612d3_pay0_HYSA", "year": 2026, "month": 12, "day": 3, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m202612d3_pay0_Cap_One", "year": 2026, "month": 12, "day": 3, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202612d3_pay0_Chase_S", "year": 2026, "month": 12, "day": 3, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202612d8_Car_Wash", "year": 2026, "month": 12, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m202612d14_Fidelity", "year": 2026, "month": 12, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m202612d15_Claude", "year": 2026, "month": 12, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m202612d17_pay1_HYSA", "year": 2026, "month": 12, "day": 17, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m202612d17_pay1_Cap_One", "year": 2026, "month": 12, "day": 17, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202612d17_pay1_Chase_S", "year": 2026, "month": 12, "day": 17, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202612d24_ChatGPT", "year": 2026, "month": 12, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m202612d30_Car_Insurance", "year": 2026, "month": 12, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202612d31_pay2_HYSA", "year": 2026, "month": 12, "day": 31, "label": "HYSA", "category": "High Savings", "amount": 2400}, {"id": "m202612d31_pay2_Cap_One", "year": 2026, "month": 12, "day": 31, "label": "Cap One", "category": "Expenses", "amount": 250}, {"id": "m202612d31_pay2_Chase_S", "year": 2026, "month": 12, "day": 31, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20271d1_Rent", "year": 2027, "month": 1, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20271d1_Utilities", "year": 2027, "month": 1, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20271d1_Charging", "year": 2027, "month": 1, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20271d3_Car_EMI", "year": 2027, "month": 1, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20271d8_Car_Wash", "year": 2027, "month": 1, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20271d14_Fidelity", "year": 2027, "month": 1, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20271d14_pay0_India", "year": 2027, "month": 1, "day": 14, "label": "India", "category": "India", "amount": 1250}, {"id": "m20271d14_pay0_HYSA", "year": 2027, "month": 1, "day": 14, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20271d14_pay0_Cap_One", "year": 2027, "month": 1, "day": 14, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20271d14_pay0_Chase_S", "year": 2027, "month": 1, "day": 14, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20271d15_Claude", "year": 2027, "month": 1, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20271d24_ChatGPT", "year": 2027, "month": 1, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20271d28_pay1_HYSA", "year": 2027, "month": 1, "day": 28, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20271d28_pay1_Cap_One", "year": 2027, "month": 1, "day": 28, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20271d28_pay1_Chase_S", "year": 2027, "month": 1, "day": 28, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20271d30_Car_Insurance", "year": 2027, "month": 1, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20272d1_Rent", "year": 2027, "month": 2, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20272d1_Utilities", "year": 2027, "month": 2, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20272d1_Charging", "year": 2027, "month": 2, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20272d3_Car_EMI", "year": 2027, "month": 2, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20272d8_Car_Wash", "year": 2027, "month": 2, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20272d11_pay0_India", "year": 2027, "month": 2, "day": 11, "label": "India", "category": "India", "amount": 1250}, {"id": "m20272d11_pay0_HYSA", "year": 2027, "month": 2, "day": 11, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20272d11_pay0_Cap_One", "year": 2027, "month": 2, "day": 11, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20272d11_pay0_Chase_S", "year": 2027, "month": 2, "day": 11, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20272d14_Fidelity", "year": 2027, "month": 2, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20272d15_Claude", "year": 2027, "month": 2, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20272d24_ChatGPT", "year": 2027, "month": 2, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20272d25_pay1_HYSA", "year": 2027, "month": 2, "day": 25, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20272d25_pay1_Cap_One", "year": 2027, "month": 2, "day": 25, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20272d25_pay1_Chase_S", "year": 2027, "month": 2, "day": 25, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20273d1_Rent", "year": 2027, "month": 3, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20273d1_Utilities", "year": 2027, "month": 3, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20273d1_Charging", "year": 2027, "month": 3, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20273d3_Car_EMI", "year": 2027, "month": 3, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20273d8_Car_Wash", "year": 2027, "month": 3, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20273d11_pay0_India", "year": 2027, "month": 3, "day": 11, "label": "India", "category": "India", "amount": 1250}, {"id": "m20273d11_pay0_HYSA", "year": 2027, "month": 3, "day": 11, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20273d11_pay0_Cap_One", "year": 2027, "month": 3, "day": 11, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20273d11_pay0_Chase_S", "year": 2027, "month": 3, "day": 11, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20273d14_Fidelity", "year": 2027, "month": 3, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20273d15_Claude", "year": 2027, "month": 3, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20273d24_ChatGPT", "year": 2027, "month": 3, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20273d25_pay1_HYSA", "year": 2027, "month": 3, "day": 25, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20273d25_pay1_Cap_One", "year": 2027, "month": 3, "day": 25, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20273d25_pay1_Chase_S", "year": 2027, "month": 3, "day": 25, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20273d30_Car_Insurance", "year": 2027, "month": 3, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20274d1_Rent", "year": 2027, "month": 4, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20274d1_Utilities", "year": 2027, "month": 4, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20274d1_Charging", "year": 2027, "month": 4, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20274d3_Car_EMI", "year": 2027, "month": 4, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20274d8_Car_Wash", "year": 2027, "month": 4, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20274d8_pay0_India", "year": 2027, "month": 4, "day": 8, "label": "India", "category": "India", "amount": 1250}, {"id": "m20274d8_pay0_HYSA", "year": 2027, "month": 4, "day": 8, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20274d8_pay0_Cap_One", "year": 2027, "month": 4, "day": 8, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20274d8_pay0_Chase_S", "year": 2027, "month": 4, "day": 8, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20274d14_Fidelity", "year": 2027, "month": 4, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20274d15_Claude", "year": 2027, "month": 4, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20274d22_pay1_HYSA", "year": 2027, "month": 4, "day": 22, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20274d22_pay1_Cap_One", "year": 2027, "month": 4, "day": 22, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20274d22_pay1_Chase_S", "year": 2027, "month": 4, "day": 22, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20274d24_ChatGPT", "year": 2027, "month": 4, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20274d30_Car_Insurance", "year": 2027, "month": 4, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20275d1_Rent", "year": 2027, "month": 5, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20275d1_Utilities", "year": 2027, "month": 5, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20275d1_Charging", "year": 2027, "month": 5, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20275d3_Car_EMI", "year": 2027, "month": 5, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20275d6_pay0_India", "year": 2027, "month": 5, "day": 6, "label": "India", "category": "India", "amount": 1250}, {"id": "m20275d6_pay0_HYSA", "year": 2027, "month": 5, "day": 6, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20275d6_pay0_Cap_One", "year": 2027, "month": 5, "day": 6, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20275d6_pay0_Chase_S", "year": 2027, "month": 5, "day": 6, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20275d8_Car_Wash", "year": 2027, "month": 5, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20275d14_Fidelity", "year": 2027, "month": 5, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20275d15_Claude", "year": 2027, "month": 5, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20275d20_pay1_HYSA", "year": 2027, "month": 5, "day": 20, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20275d20_pay1_Cap_One", "year": 2027, "month": 5, "day": 20, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20275d20_pay1_Chase_S", "year": 2027, "month": 5, "day": 20, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20275d22_Cancel_Claude_Sub.", "year": 2027, "month": 5, "day": 22, "label": "Cancel Claude Sub.", "category": "Expenses", "amount": 20}, {"id": "m20275d24_ChatGPT", "year": 2027, "month": 5, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20275d30_Car_Insurance", "year": 2027, "month": 5, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20276d1_Rent", "year": 2027, "month": 6, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20276d1_Utilities", "year": 2027, "month": 6, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20276d1_Charging", "year": 2027, "month": 6, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20276d3_Car_EMI", "year": 2027, "month": 6, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20276d3_pay0_India", "year": 2027, "month": 6, "day": 3, "label": "India", "category": "India", "amount": 1250}, {"id": "m20276d3_pay0_HYSA", "year": 2027, "month": 6, "day": 3, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20276d3_pay0_Cap_One", "year": 2027, "month": 6, "day": 3, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20276d3_pay0_Chase_S", "year": 2027, "month": 6, "day": 3, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20276d8_Car_Wash", "year": 2027, "month": 6, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20276d14_Fidelity", "year": 2027, "month": 6, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20276d15_Claude", "year": 2027, "month": 6, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20276d17_pay1_HYSA", "year": 2027, "month": 6, "day": 17, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20276d17_pay1_Cap_One", "year": 2027, "month": 6, "day": 17, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20276d17_pay1_Chase_S", "year": 2027, "month": 6, "day": 17, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20276d24_ChatGPT", "year": 2027, "month": 6, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20276d30_Car_Insurance", "year": 2027, "month": 6, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20277d1_Rent", "year": 2027, "month": 7, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20277d1_Utilities", "year": 2027, "month": 7, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20277d1_Charging", "year": 2027, "month": 7, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20277d1_pay0_India", "year": 2027, "month": 7, "day": 1, "label": "India", "category": "India", "amount": 1250}, {"id": "m20277d1_pay0_HYSA", "year": 2027, "month": 7, "day": 1, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20277d1_pay0_Cap_One", "year": 2027, "month": 7, "day": 1, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20277d1_pay0_Chase_S", "year": 2027, "month": 7, "day": 1, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20277d3_Car_EMI", "year": 2027, "month": 7, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20277d8_Car_Wash", "year": 2027, "month": 7, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20277d14_Fidelity", "year": 2027, "month": 7, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20277d15_Claude", "year": 2027, "month": 7, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20277d15_pay1_HYSA", "year": 2027, "month": 7, "day": 15, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20277d15_pay1_Cap_One", "year": 2027, "month": 7, "day": 15, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20277d15_pay1_Chase_S", "year": 2027, "month": 7, "day": 15, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20277d24_ChatGPT", "year": 2027, "month": 7, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20277d29_pay2_HYSA", "year": 2027, "month": 7, "day": 29, "label": "HYSA", "category": "High Savings", "amount": 2400}, {"id": "m20277d29_pay2_Cap_One", "year": 2027, "month": 7, "day": 29, "label": "Cap One", "category": "Expenses", "amount": 250}, {"id": "m20277d29_pay2_Chase_S", "year": 2027, "month": 7, "day": 29, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20277d30_Car_Insurance", "year": 2027, "month": 7, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20278d1_Rent", "year": 2027, "month": 8, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20278d1_Utilities", "year": 2027, "month": 8, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20278d1_Charging", "year": 2027, "month": 8, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20278d3_Car_EMI", "year": 2027, "month": 8, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20278d8_Car_Wash", "year": 2027, "month": 8, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20278d12_pay0_India", "year": 2027, "month": 8, "day": 12, "label": "India", "category": "India", "amount": 1250}, {"id": "m20278d12_pay0_HYSA", "year": 2027, "month": 8, "day": 12, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20278d12_pay0_Cap_One", "year": 2027, "month": 8, "day": 12, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20278d12_pay0_Chase_S", "year": 2027, "month": 8, "day": 12, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20278d14_Fidelity", "year": 2027, "month": 8, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20278d15_Claude", "year": 2027, "month": 8, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20278d24_ChatGPT", "year": 2027, "month": 8, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20278d26_pay1_HYSA", "year": 2027, "month": 8, "day": 26, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20278d26_pay1_Cap_One", "year": 2027, "month": 8, "day": 26, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20278d26_pay1_Chase_S", "year": 2027, "month": 8, "day": 26, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20278d30_Car_Insurance", "year": 2027, "month": 8, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m20279d1_Rent", "year": 2027, "month": 9, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m20279d1_Utilities", "year": 2027, "month": 9, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m20279d1_Charging", "year": 2027, "month": 9, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m20279d3_Car_EMI", "year": 2027, "month": 9, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m20279d8_Car_Wash", "year": 2027, "month": 9, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m20279d9_pay0_India", "year": 2027, "month": 9, "day": 9, "label": "India", "category": "India", "amount": 1250}, {"id": "m20279d9_pay0_HYSA", "year": 2027, "month": 9, "day": 9, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m20279d9_pay0_Cap_One", "year": 2027, "month": 9, "day": 9, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20279d9_pay0_Chase_S", "year": 2027, "month": 9, "day": 9, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20279d14_Fidelity", "year": 2027, "month": 9, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m20279d15_Claude", "year": 2027, "month": 9, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m20279d23_pay1_HYSA", "year": 2027, "month": 9, "day": 23, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m20279d23_pay1_Cap_One", "year": 2027, "month": 9, "day": 23, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m20279d23_pay1_Chase_S", "year": 2027, "month": 9, "day": 23, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m20279d24_ChatGPT", "year": 2027, "month": 9, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m20279d30_Car_Insurance", "year": 2027, "month": 9, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202710d1_Rent", "year": 2027, "month": 10, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m202710d1_Utilities", "year": 2027, "month": 10, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m202710d1_Charging", "year": 2027, "month": 10, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m202710d3_Car_EMI", "year": 2027, "month": 10, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m202710d7_pay0_India", "year": 2027, "month": 10, "day": 7, "label": "India", "category": "India", "amount": 1250}, {"id": "m202710d7_pay0_HYSA", "year": 2027, "month": 10, "day": 7, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m202710d7_pay0_Cap_One", "year": 2027, "month": 10, "day": 7, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202710d7_pay0_Chase_S", "year": 2027, "month": 10, "day": 7, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202710d8_Car_Wash", "year": 2027, "month": 10, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m202710d14_Fidelity", "year": 2027, "month": 10, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m202710d15_Claude", "year": 2027, "month": 10, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m202710d21_pay1_HYSA", "year": 2027, "month": 10, "day": 21, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m202710d21_pay1_Cap_One", "year": 2027, "month": 10, "day": 21, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202710d21_pay1_Chase_S", "year": 2027, "month": 10, "day": 21, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202710d24_ChatGPT", "year": 2027, "month": 10, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m202710d30_Car_Insurance", "year": 2027, "month": 10, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202711d1_Rent", "year": 2027, "month": 11, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m202711d1_Utilities", "year": 2027, "month": 11, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m202711d1_Charging", "year": 2027, "month": 11, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m202711d3_Car_EMI", "year": 2027, "month": 11, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m202711d4_pay0_India", "year": 2027, "month": 11, "day": 4, "label": "India", "category": "India", "amount": 1250}, {"id": "m202711d4_pay0_HYSA", "year": 2027, "month": 11, "day": 4, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m202711d4_pay0_Cap_One", "year": 2027, "month": 11, "day": 4, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202711d4_pay0_Chase_S", "year": 2027, "month": 11, "day": 4, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202711d8_Car_Wash", "year": 2027, "month": 11, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m202711d14_Fidelity", "year": 2027, "month": 11, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m202711d15_Claude", "year": 2027, "month": 11, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m202711d18_pay1_HYSA", "year": 2027, "month": 11, "day": 18, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m202711d18_pay1_Cap_One", "year": 2027, "month": 11, "day": 18, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202711d18_pay1_Chase_S", "year": 2027, "month": 11, "day": 18, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202711d24_ChatGPT", "year": 2027, "month": 11, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m202711d30_Car_Insurance", "year": 2027, "month": 11, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202712d1_Rent", "year": 2027, "month": 12, "day": 1, "label": "Rent", "category": "Expenses", "amount": 750}, {"id": "m202712d1_Utilities", "year": 2027, "month": 12, "day": 1, "label": "Utilities", "category": "Expenses", "amount": 120}, {"id": "m202712d1_Charging", "year": 2027, "month": 12, "day": 1, "label": "Charging", "category": "Expenses", "amount": 30}, {"id": "m202712d2_pay0_India", "year": 2027, "month": 12, "day": 2, "label": "India", "category": "India", "amount": 1250}, {"id": "m202712d2_pay0_HYSA", "year": 2027, "month": 12, "day": 2, "label": "HYSA", "category": "High Savings", "amount": 900}, {"id": "m202712d2_pay0_Cap_One", "year": 2027, "month": 12, "day": 2, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202712d2_pay0_Chase_S", "year": 2027, "month": 12, "day": 2, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202712d3_Car_EMI", "year": 2027, "month": 12, "day": 3, "label": "Car EMI", "category": "Expenses", "amount": 570}, {"id": "m202712d8_Car_Wash", "year": 2027, "month": 12, "day": 8, "label": "Car Wash", "category": "Expenses", "amount": 20}, {"id": "m202712d14_Fidelity", "year": 2027, "month": 12, "day": 14, "label": "Fidelity", "category": "Investment", "amount": 200}, {"id": "m202712d15_Claude", "year": 2027, "month": 12, "day": 15, "label": "Claude", "category": "Expenses", "amount": 20}, {"id": "m202712d16_pay1_HYSA", "year": 2027, "month": 12, "day": 16, "label": "HYSA", "category": "High Savings", "amount": 700}, {"id": "m202712d16_pay1_Cap_One", "year": 2027, "month": 12, "day": 16, "label": "Cap One", "category": "Expenses", "amount": 300}, {"id": "m202712d16_pay1_Chase_S", "year": 2027, "month": 12, "day": 16, "label": "Chase S", "category": "High Savings", "amount": 100}, {"id": "m202712d24_ChatGPT", "year": 2027, "month": 12, "day": 24, "label": "ChatGPT", "category": "Expenses", "amount": 20}, {"id": "m202712d30_Car_Insurance", "year": 2027, "month": 12, "day": 30, "label": "Car Insurance", "category": "Expenses", "amount": 200}, {"id": "m202712d30_pay2_HYSA", "year": 2027, "month": 12, "day": 30, "label": "HYSA", "category": "High Savings", "amount": 2400}, {"id": "m202712d30_pay2_Cap_One", "year": 2027, "month": 12, "day": 30, "label": "Cap One", "category": "Expenses", "amount": 250}, {"id": "m202712d30_pay2_Chase_S", "year": 2027, "month": 12, "day": 30, "label": "Chase S", "category": "High Savings", "amount": 100}];
+
+let checked = new Set();
+let customAmounts = {};
+let customEntries = {};
+let curYear = 2026;
+let curMonth = 10;
+let sheetUrl = '';
+let syncTimeout = null;
+
+// ---- Load from localStorage first ----
+function loadLocal() {
+  try { checked = new Set(JSON.parse(localStorage.getItem('fc_checked')||'[]')); } catch(e){}
+  try { customAmounts = JSON.parse(localStorage.getItem('fc_amounts')||'{}'); } catch(e){}
+  try { customEntries = JSON.parse(localStorage.getItem('fc_entries')||'{}'); } catch(e){}
+  sheetUrl = localStorage.getItem('fc_sheet_url') || '';
+}
+
+function saveLocal() {
+  try {
+    localStorage.setItem('fc_checked', JSON.stringify([...checked]));
+    localStorage.setItem('fc_amounts', JSON.stringify(customAmounts));
+    localStorage.setItem('fc_entries', JSON.stringify(customEntries));
+  } catch(e){}
+}
+
+// ---- Google Sheets Sync ----
+function setSyncStatus(msg, type='') {
+  const el = document.getElementById('syncStatus');
+  el.textContent = msg;
+  el.className = 'sync-status' + (type ? ' '+type : '');
+}
+
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = 'cb_' + Date.now();
+    const script = document.createElement('script');
+    window[cb] = (data) => { delete window[cb]; document.body.removeChild(script); resolve(data); };
+    script.onerror = () => { delete window[cb]; document.body.removeChild(script); reject(new Error('JSONP failed')); };
+    script.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
+    document.body.appendChild(script);
+  });
+}
+
+async function pushToSheet() {
+  if (!sheetUrl) return;
+  try {
+    setSyncStatus('Syncing...', 'syncing');
+    const payload = {
+      fc_checked: [...checked],
+      fc_amounts: customAmounts,
+      fc_entries: customEntries
+    };
+    // Encode payload as URL param and use JSONP (works cross-origin)
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    const data = await jsonp(sheetUrl + '?action=write&payload=' + encoded);
+    if (data && data.status === 'ok') {
+      setSyncStatus('Synced ' + new Date().toLocaleTimeString(), 'synced');
+    } else {
+      setSyncStatus('Sync failed — data saved locally', 'error');
+    }
+  } catch(e) {
+    setSyncStatus('Sync failed — data saved locally', 'error');
+  }
+}
+
+async function pullFromSheet() {
+  if (!sheetUrl) return false;
+  try {
+    setSyncStatus('Loading from Sheets...', 'syncing');
+    const data = await jsonp(sheetUrl);
+    if (data && data.status === 'ok' && data.data) {
+      const d = data.data;
+      if (d.fc_checked) checked = new Set(Array.isArray(d.fc_checked) ? d.fc_checked : JSON.parse(d.fc_checked));
+      if (d.fc_amounts) customAmounts = typeof d.fc_amounts === 'object' ? d.fc_amounts : JSON.parse(d.fc_amounts);
+      if (d.fc_entries) customEntries = typeof d.fc_entries === 'object' ? d.fc_entries : JSON.parse(d.fc_entries);
+      saveLocal();
+      setSyncStatus('Synced ' + new Date().toLocaleTimeString(), 'synced');
+      return true;
+    }
+  } catch(e) {
+    setSyncStatus('Could not reach Sheets — using local data', 'error');
+  }
+  return false;
+}
+
+function schedulePush() {
+  saveLocal();
+  if (!sheetUrl) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(pushToSheet, 1500); // debounce 1.5s
+}
+
+async function manualSync() {
+  if (!sheetUrl) {
+    document.getElementById('sheetUrl').value = '';
+    document.getElementById('setupOverlay').style.display = 'flex';
+    return;
+  }
+  await pullFromSheet();
+  renderAll();
+}
+
+function openSettings() {
+  document.getElementById('sheetUrl').value = sheetUrl || '';
+  document.getElementById('setupOverlay').style.display = 'flex';
+}
+
+async function connectSheet() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (!url || !url.includes('script.google.com')) {
+    alert('Please paste a valid Google Apps Script Web App URL');
+    return;
+  }
+  sheetUrl = url;
+  localStorage.setItem('fc_sheet_url', url);
+  document.getElementById('setupOverlay').style.display = 'none';
+  setSyncStatus('Connecting...', 'syncing');
+  const pulled = await pullFromSheet();
+  if (!pulled) await pushToSheet(); // first push if sheet is empty
+  renderAll();
+}
+
+function skipSetup() {
+  document.getElementById('setupOverlay').style.display = 'none';
+  localStorage.setItem('fc_setup_seen', '1');
+  setSyncStatus('Offline mode — tap ⚙️ to connect Google Sheets');
+}
+
+// ---- App Logic ----
+function fmt(n) { return '$' + Math.abs(Number(n)).toLocaleString(); }
+function getAmount(id, def) { return customAmounts[id] !== undefined ? customAmounts[id] : def; }
+function getMonthItems(y, m) { return ALL_ITEMS.filter(i => i.year===y && i.month===m); }
+function getEntryKey(y, m) { return y+'_'+m; }
+function getMonthEntries(y, m) { return customEntries[getEntryKey(y,m)] || []; }
+
+function setYear(y) {
+  curYear=y; curMonth=VALID[y][0];
+  document.getElementById('ytab2026').classList.toggle('active',y===2026);
+  document.getElementById('ytab2027').classList.toggle('active',y===2027);
+  renderAll();
+}
+function setMonth(m) { curMonth=m; renderAll(); }
+function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); }
+
+function renderTabs() {
+  const tabs = document.getElementById('monthTabs');
+  tabs.innerHTML = MONTHS.map((name,i) => {
+    const mn=i+1, isValid=VALID[curYear].includes(mn);
+    const hasChecked=getMonthItems(curYear,mn).some(it=>checked.has(it.id));
+    return `<div class="month-tab ${mn===curMonth?'active':''} ${hasChecked?'has-checked':''} ${!isValid?'disabled':''}" onclick="setMonth(${mn})">${name.slice(0,3).toUpperCase()}</div>`;
+  }).join('');
+  setTimeout(()=>{const a=document.querySelector('.month-tab.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},50);
+}
+
+function getCumulative(cat) {
+  let checkedTotal=0, total=0;
+  for (const [y,m] of ALL_PERIODS) {
+    if (y>curYear||(y===curYear&&m>curMonth)) break;
+    const items=getMonthItems(y,m), entries=getMonthEntries(y,m);
+    const catItems=items.filter(i=>i.category===cat);
+    const entryItems=entries.filter(e=>e.category===cat);
+    total += catItems.reduce((s,i)=>s+getAmount(i.id,i.amount),0)+entryItems.reduce((s,e)=>s+e.amount,0);
+    checkedTotal += catItems.filter(i=>checked.has(i.id)).reduce((s,i)=>s+getAmount(i.id,i.amount),0)+entryItems.reduce((s,e)=>s+e.amount,0);
+  }
+  return {checkedTotal, total};
+}
+
+function getTotalWithdrawals() {
+  let total=0;
+  for (const [y,m] of ALL_PERIODS) {
+    if (y>curYear||(y===curYear&&m>curMonth)) break;
+    total+=getMonthEntries(y,m).filter(e=>e.category==='Withdrawals').reduce((s,e)=>s+e.amount,0);
+  }
+  return total;
+}
+
+function renderSummary() {
+  const items=getMonthItems(curYear,curMonth), entries=getMonthEntries(curYear,curMonth);
+  const CUMUL=['Investment','High Savings'];
+  CATS.forEach(cat => {
+    let checkedAmt, totalAmt, subLabel;
+    if (CUMUL.includes(cat)) {
+      const {checkedTotal,total}=getCumulative(cat);
+      checkedAmt=checkedTotal; totalAmt=total; subLabel='of '+fmt(total)+' YTD';
+    } else {
+      const catItems=items.filter(i=>i.category===cat);
+      const entryItems=entries.filter(e=>e.category===cat);
+      totalAmt=catItems.reduce((s,i)=>s+getAmount(i.id,i.amount),0)+entryItems.reduce((s,e)=>s+e.amount,0);
+      checkedAmt=catItems.filter(i=>checked.has(i.id)).reduce((s,i)=>s+getAmount(i.id,i.amount),0);
+      subLabel='of '+fmt(totalAmt);
+    }
+    const el=document.getElementById('sum-'+cat); if(el) el.textContent=fmt(checkedAmt);
+    const sl=document.getElementById('sub-'+cat); if(sl) sl.textContent=subLabel;
+  });
+  const totalWd=getTotalWithdrawals();
+  const {checkedTotal:hsChecked}=getCumulative('High Savings');
+  const netHYSA=hsChecked-totalWd;
+  document.getElementById('sum-Withdrawals').textContent=fmt(totalWd);
+  const netEl=document.getElementById('net-hysa');
+  netEl.textContent=(netHYSA<0?'-':'')+fmt(netHYSA);
+  netEl.style.color=netHYSA<0?'#C0392B':'#2E7D32';
+}
+
+function renderBreakdown() {
+  const items=getMonthItems(curYear,curMonth), entries=getMonthEntries(curYear,curMonth);
+  const CUMUL=['Investment','High Savings'];
+  const catData=CATS.map(cat=>{
+    if (CUMUL.includes(cat)) {
+      const {checkedTotal,total}=getCumulative(cat);
+      return {cat,done:checkedTotal,total,ytd:true};
+    } else {
+      const catItems=items.filter(i=>i.category===cat);
+      const entryAmt=entries.filter(e=>e.category===cat).reduce((s,e)=>s+e.amount,0);
+      const total=catItems.reduce((s,i)=>s+getAmount(i.id,i.amount),0)+entryAmt;
+      const done=catItems.filter(i=>checked.has(i.id)).reduce((s,i)=>s+getAmount(i.id,i.amount),0);
+      return {cat,done,total,ytd:false};
+    }
+  });
+  const maxTotal=Math.max(...catData.map(d=>d.total),1);
+  document.getElementById('breakdownList').innerHTML=catData.map(({cat,done,total,ytd})=>{
+    const pct=total>0?(done/total*100).toFixed(0):0;
+    const barW=total>0?(done/maxTotal*100):0;
+    const color=CAT_COLORS[cat];
+    return `<div class="breakdown-row">
+      <div class="breakdown-cat"><div class="breakdown-dot" style="background:${color}"></div>
+      <div class="breakdown-cat-name">${cat}${ytd?' <span style="font-size:9px;color:#aaa">YTD</span>':''}</div></div>
+      <div class="breakdown-progress-wrap"><div class="breakdown-progress-bar" style="width:${barW}%;background:${color}"></div></div>
+      <div class="breakdown-amounts"><div class="breakdown-checked" style="color:${color}">${fmt(done)}</div>
+      <div class="breakdown-total">${pct}% of ${fmt(total)}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderCalendar() {
+  const section=document.getElementById('calendarSection');
+  const items=getMonthItems(curYear,curMonth);
+  if(!items.length){section.innerHTML='<p style="padding:20px;color:#888;text-align:center">No items this month.</p>';return;}
+  const byDay={};
+  items.forEach(it=>{if(!byDay[it.day])byDay[it.day]=[];byDay[it.day].push(it);});
+  const days=Object.keys(byDay).map(Number).sort((a,b)=>a-b);
+  section.innerHTML=days.map(day=>{
+    const d=new Date(curYear,curMonth-1,day), dn=DAY_NAMES[d.getDay()];
+    const dayItems=byDay[day], allDone=dayItems.every(i=>checked.has(i.id));
+    const rows=dayItems.map(it=>{
+      const catClass='cat-'+it.category.replace(' ','-');
+      return `<div class="item-row ${checked.has(it.id)?'checked':''}" data-id="${it.id}" onclick="toggleItem('${it.id}')">
+        <div class="cb-wrap"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="item-info"><div class="item-label">${it.label}</div><span class="item-cat-badge ${catClass}">${it.category}</span></div>
+        <div class="item-amount" onclick="openModal(event,'${it.id}')">${fmt(getAmount(it.id,it.amount))}</div>
+      </div>`;
+    }).join('');
+    return `<div class="day-group">
+      <div class="day-header"><div><div class="day-label">${dn}, ${MONTHS[curMonth-1]} ${day}</div>
+      <div class="day-sub">${dayItems.length} item${dayItems.length>1?'s':''} · ${fmt(dayItems.reduce((s,i)=>s+getAmount(i.id,i.amount),0))}</div></div>
+      ${allDone?'<div class="day-dot"></div>':''}</div>${rows}</div>`;
+  }).join('');
+}
+
+function toggleItem(id) {
+  if(checked.has(id))checked.delete(id);else checked.add(id);
+  const row=document.querySelector(`[data-id="${id}"]`);
+  if(row)row.classList.toggle('checked',checked.has(id));
+  schedulePush(); renderSummary(); renderBreakdown();
+}
+
+let editingId=null;
+function openModal(e,id){
+  e.stopPropagation(); editingId=id;
+  const it=ALL_ITEMS.find(i=>i.id===id);
+  document.getElementById('modalLabel').textContent='Edit: '+it.label;
+  document.getElementById('modalInput').value=getAmount(id,it.amount);
+  document.getElementById('amountModal').style.display='flex';
+  setTimeout(()=>document.getElementById('modalInput').select(),50);
+}
+function closeModal(e){if(e&&e.target!==document.getElementById('amountModal'))return;document.getElementById('amountModal').style.display='none';}
+function saveAmount(){
+  const val=parseInt(document.getElementById('modalInput').value);
+  if(!isNaN(val)&&val>=0&&editingId){
+    customAmounts[editingId]=val;
+    document.getElementById('amountModal').style.display='none';
+    schedulePush(); renderCalendar(); renderSummary(); renderBreakdown();
+  }
+}
+
+function renderAddBox(){
+  document.getElementById('addEntryMonth').textContent=MONTHS[curMonth-1]+' '+curYear;
+  const entries=getMonthEntries(curYear,curMonth);
+  document.getElementById('addEntryList').innerHTML=entries.map((e,i)=>{
+    const catClass='cat-'+e.category.replace(' ','-'), isWd=e.category==='Withdrawals';
+    return `<div class="add-entry-item ${isWd?'ae-withdrawal':''}">
+      <div class="ae-label">${e.label}</div>
+      <span class="ae-badge ${catClass}">${e.category}</span>
+      <div class="ae-amt" style="${!isWd?'color:'+CAT_COLORS[e.category]:''}">${fmt(e.amount)}</div>
+      <button class="ae-del" onclick="deleteEntry(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function addEntry(){
+  const label=document.getElementById('aeLabel').value.trim();
+  const amount=parseInt(document.getElementById('aeAmount').value);
+  const category=document.getElementById('aeCat').value;
+  if(!label||isNaN(amount)||amount<=0)return;
+  const key=getEntryKey(curYear,curMonth);
+  if(!customEntries[key])customEntries[key]=[];
+  customEntries[key].unshift({label,amount,category});
+  document.getElementById('aeLabel').value='';
+  document.getElementById('aeAmount').value='';
+  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown();
+}
+
+function deleteEntry(idx){
+  const key=getEntryKey(curYear,curMonth);
+  if(!customEntries[key])return;
+  customEntries[key].splice(idx,1);
+  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown();
+}
+
+document.getElementById('aeLabel').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('aeAmount').focus();});
+document.getElementById('aeAmount').addEventListener('keydown',e=>{if(e.key==='Enter')addEntry();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('amountModal').style.display!=='none')saveAmount();
+  if(e.key==='Escape')document.getElementById('amountModal').style.display='none';
+});
+
+// ---- Init ----
+loadLocal();
+const now=new Date(), nowY=now.getFullYear(), nowM=now.getMonth()+1;
+if(nowY===2026&&VALID[2026].includes(nowM)){curYear=2026;curMonth=nowM;}
+else if(nowY===2027&&VALID[2027].includes(nowM)){curYear=2027;curMonth=nowM;}
+document.getElementById('ytab'+curYear).classList.add('active');
+document.getElementById('ytab'+(curYear===2026?2027:2026)).classList.remove('active');
+
+renderAll();
+
+// Auto-pull from sheet on load if URL is set
+if (sheetUrl) {
+  pullFromSheet().then(pulled => { if(pulled) renderAll(); });
+} else if (!localStorage.getItem('fc_setup_seen')) {
+  // First time — show setup
+  document.getElementById('setupOverlay').style.display = 'flex';
+  localStorage.setItem('fc_setup_seen', '1');
+}
+
+// Track offline changes and auto-push when back online
+let pendingSync = false;
+
+window.addEventListener('offline', () => {
+  setSyncStatus('Offline — changes saved locally', 'error');
+  pendingSync = true;
+});
+
+window.addEventListener('online', () => {
+  if (sheetUrl && pendingSync) {
+    setSyncStatus('Back online — syncing...', 'syncing');
+    pushToSheet().then(() => { pendingSync = false; });
+  } else {
+    setSyncStatus('Back online', 'synced');
+  }
+});
+
+// Also set pendingSync if a push fails
+const _origPush = pushToSheet;
+pushToSheet = async function() {
+  if (!navigator.onLine) { pendingSync = true; saveLocal(); setSyncStatus('Offline — changes saved locally', 'error'); return; }
+  try { await _origPush(); pendingSync = false; }
+  catch(e) { pendingSync = true; }
+};
+</script>
+</body>
+</html>
