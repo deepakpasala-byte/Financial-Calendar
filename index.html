@@ -141,6 +141,21 @@
 
   .spinner { display:inline-block; width:10px; height:10px; border:2px solid #555; border-top-color:#aaa; border-radius:50%; animation:spin 0.6s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
+
+  .pin-overlay { position:fixed; inset:0; background:#1C1C1C; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
+  .pin-box { text-align:center; }
+  .pin-box h2 { color:white; font-size:22px; font-weight:700; margin-bottom:6px; letter-spacing:1px; }
+  .pin-box p { color:#888; font-size:13px; margin-bottom:32px; }
+  .pin-dots { display:flex; gap:16px; justify-content:center; margin-bottom:32px; }
+  .pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid #555; background:transparent; transition:all 0.15s; }
+  .pin-dot.filled { background:#C8E6C0; border-color:#C8E6C0; }
+  .pin-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .pin-btn { width:72px; height:72px; border-radius:50%; border:1.5px solid #333; background:#2a2a2a; color:white; font-size:22px; font-weight:600; cursor:pointer; transition:all 0.1s; }
+  .pin-btn:active { background:#3a3a3a; border-color:#555; transform:scale(0.95); }
+  .pin-btn.del { font-size:16px; color:#888; }
+  .pin-btn.empty { border:none; background:transparent; pointer-events:none; }
+  .pin-error { color:#C0392B; font-size:13px; margin-top:16px; opacity:0; transition:opacity 0.3s; }
+  .pin-error.show { opacity:1; }
 </style>
 </head>
 <body>
@@ -164,6 +179,32 @@
   </div>
 </div>
 
+
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <h2>FINANCIAL CALENDAR</h2>
+    <p>Enter your PIN to continue</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn empty"></button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError">Incorrect PIN. Try again.</div>
+  </div>
+</div>
 <div class="app-header">
   <div class="header-row">
     <h1>FINANCIAL CALENDAR</h1>
@@ -248,6 +289,41 @@ let curMonth = 10;
 let sheetUrl = '';
 let syncTimeout = null;
 
+
+// ---- PIN Lock ----
+const CORRECT_PIN = '15';
+const SECRET_TOKEN = 'fc_deepak_15';
+let pinEntry = '';
+
+function pinPress(digit) {
+  if (pinEntry.length >= 2) return;
+  pinEntry += digit;
+  document.getElementById('dot' + (pinEntry.length-1)).classList.add('filled');
+  if (pinEntry.length === 2) {
+    setTimeout(checkPin, 150);
+  }
+}
+
+function pinDel() {
+  if (pinEntry.length === 0) return;
+  document.getElementById('dot' + (pinEntry.length-1)).classList.remove('filled');
+  pinEntry = pinEntry.slice(0, -1);
+}
+
+function checkPin() {
+  if (pinEntry === CORRECT_PIN) {
+    document.getElementById('pinOverlay').style.display = 'none';
+  } else {
+    document.getElementById('pinError').classList.add('show');
+    // Shake dots
+    pinEntry = '';
+    document.getElementById('dot0').classList.remove('filled');
+    document.getElementById('dot1').classList.remove('filled');
+    setTimeout(() => document.getElementById('pinError').classList.remove('show'), 2000);
+  }
+}
+
+// Add token to all sync requests
 // ---- Load from localStorage first ----
 function loadLocal() {
   try { checked = new Set(JSON.parse(localStorage.getItem('fc_checked')||'[]')); } catch(e){}
@@ -293,7 +369,7 @@ async function pushToSheet() {
     };
     // Encode payload as URL param and use JSONP (works cross-origin)
     const encoded = encodeURIComponent(JSON.stringify(payload));
-    const data = await jsonp(sheetUrl + '?action=write&payload=' + encoded);
+    const data = await jsonp(sheetUrl + '?action=write&token=' + SECRET_TOKEN + '&payload=' + encoded);
     if (data && data.status === 'ok') {
       setSyncStatus('Synced ' + new Date().toLocaleTimeString(), 'synced');
     } else {
