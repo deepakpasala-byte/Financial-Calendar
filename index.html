@@ -360,6 +360,11 @@ function setWCur(cur) {
   wCur = cur;
   document.getElementById('wBtnINR').classList.toggle('active', cur === 'INR');
   document.getElementById('wBtnUSD').classList.toggle('active', cur === 'USD');
+  // Update amount placeholder to match selected currency
+  const cat = document.getElementById('aeCat')?.value;
+  if (cat === 'Wedding') {
+    document.getElementById('aeAmount').placeholder = cur === 'INR' ? '₹0' : '$0';
+  }
 }
 
 function fmtINR(n) {
@@ -710,7 +715,7 @@ function renderAddBox(){
     return `<div class="add-entry-item ${isWd?'ae-withdrawal':''}">
       <div class="ae-label">${e.label}${fromLabel}</div>
       <span class="ae-badge ${catClass}">${e.category}</span>
-      <div class="ae-amt" style="${!isWd?'color:'+CAT_COLORS[e.category]:''}">${fmt(e.amount)}</div>
+      <div class="ae-amt" style="${!isWd?'color:'+CAT_COLORS[e.category]:''}">${e.category==='Wedding'&&e.amtINR ? fmtINR(e.amtINR) : fmt(e.amount)}</div>
       <button class="ae-del" onclick="deleteEntry(${i})" title="${carriedOver?'Remove this withdrawal':'Remove'}">×</button>
     </div>`;
   }).join('');
@@ -723,10 +728,16 @@ function addEntry(){
   if(!label||isNaN(amount)||amount<=0)return;
   const key=getEntryKey(curYear,curMonth);
   if(!customEntries[key])customEntries[key]=[];
-  customEntries[key].unshift({label,amount,category});
+  const entry = {label,amount,category};
+  if(category==='Wedding'){
+    const rate=parseFloat(document.getElementById('weddingRate')?.value)||95.14;
+    entry.amtINR = wCur==='USD' ? amount*rate : amount;
+    entry.wCur = wCur;
+  }
+  customEntries[key].unshift(entry);
   document.getElementById('aeLabel').value='';
   document.getElementById('aeAmount').value='';
-  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown();
+  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown(); updateWedding();
 }
 
 function deleteEntry(idx){
