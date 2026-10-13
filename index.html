@@ -66,6 +66,20 @@
   .summary-card.withdrawals .s-amount { color:var(--wd-fg); }
   .wd-right { text-align:right; }
   .wd-right .s-amount { color:var(--hs-fg); }
+  /* Wedding tracker inline */
+  .summary-card.withdrawals { flex-wrap: wrap; gap: 0; }
+  .wd-section { flex: 1; min-width: 120px; }
+  .wedding-inline { flex: 1; min-width: 160px; background: #FFF0F5; border-radius: 8px; padding: 8px 10px; border: 1px solid #F8BBD0; margin-left: 10px; }
+  .wedding-inline .s-label { color: #880E4F; }
+  .wedding-inline .s-amount { color: #880E4F; font-size: 13px; }
+  .w-sub { font-size: 9px; color: #888; margin-top: 1px; }
+  .w-rate-row { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #aaa; margin-top: 5px; }
+  .w-rate-row input { width: 50px; border: 1px solid #ddd; border-radius: 4px; padding: 2px 4px; font-size: 9px; font-weight: 600; text-align: center; outline: none; }
+  .w-rate-row input:focus { border-color: #880E4F; }
+  .w-cur-toggle { display: flex; gap: 4px; margin-top: 5px; }
+  .w-cur-btn { flex: 1; border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 3px; font-size: 9px; font-weight: 700; cursor: pointer; color: #888; }
+  .w-cur-btn.active { background: #880E4F; color: white; border-color: #880E4F; }
+  .cat-Wedding { background: #FFF0F5; color: #880E4F; }
 
   .add-entry-box { margin:12px 12px 0; background:white; border-radius:14px; border:1.5px solid var(--border); padding:14px; }
   .add-entry-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:10px; }
@@ -230,9 +244,21 @@
   <div class="summary-card investment"><div class="s-label">Investment</div><div class="s-amount" id="sum-Investment">$0</div><div class="s-sub" id="sub-Investment">of $0 YTD</div></div>
   <div class="summary-card india"><div class="s-label">India</div><div class="s-amount" id="sum-India">$0</div><div class="s-sub" id="sub-India">of $0</div></div>
   <div class="summary-card hysa"><div class="s-label">High Savings</div><div class="s-amount" id="sum-High Savings">$0</div><div class="s-sub" id="sub-High Savings">of $0 YTD</div></div>
-  <div class="summary-card withdrawals">
-    <div class="wd-left"><div class="s-label">Withdrawals from HYSA</div><div class="s-amount" id="sum-Withdrawals">$0</div></div>
-    <div class="wd-right"><div class="s-label">Net HYSA Balance</div><div class="s-amount" id="net-hysa">$0</div></div>
+  <div class="summary-card withdrawals" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div><div class="s-label">Withdrawals from HYSA</div><div class="s-amount" id="sum-Withdrawals">$0</div></div>
+      <div><div class="s-label">Net HYSA Balance</div><div class="s-amount" id="net-hysa" style="color:var(--hs-fg);">$0</div></div>
+    </div>
+    <div class="wedding-inline">
+      <div class="s-label">💍 Wedding Fund</div>
+      <div class="s-amount" id="weddingRemaining">₹21,50,000</div>
+      <div class="w-sub">of ₹21,50,000 · spent: <span id="weddingSpent">₹0</span> (<span id="weddingPct">0%</span>)</div>
+      <div class="w-rate-row">$1 = ₹<input type="number" id="weddingRate" value="95.14" step="0.01" oninput="updateWedding()"></div>
+      <div class="w-cur-toggle">
+        <button class="w-cur-btn active" id="wBtnINR" onclick="setWCur('INR')">₹ INR</button>
+        <button class="w-cur-btn" id="wBtnUSD" onclick="setWCur('USD')">$ USD</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -247,6 +273,7 @@
       <option value="India">India</option>
       <option value="High Savings">High Savings</option>
       <option value="Withdrawals">Withdrawal (from HYSA)</option>
+      <option value="Wedding">Wedding 💍</option>
     </select>
     <button class="add-entry-btn" onclick="addEntry()">Add</button>
   </div>
@@ -324,8 +351,49 @@ function checkPin() {
 }
 
 // Add token to all sync requests
+
+// ---- Wedding Fund ----
+const W_TARGET = 2150000; // ₹21,50,000
+let wCur = 'INR';
+
+function setWCur(cur) {
+  wCur = cur;
+  document.getElementById('wBtnINR').classList.toggle('active', cur === 'INR');
+  document.getElementById('wBtnUSD').classList.toggle('active', cur === 'USD');
+}
+
+function fmtINR(n) {
+  n = Math.round(n);
+  const s = n.toString();
+  if (s.length <= 3) return '₹' + s;
+  const last3 = s.slice(-3);
+  const rest = s.slice(0, -3);
+  return '₹' + rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + ',' + last3;
+}
+
+function updateWedding() {
+  const rate = parseFloat(document.getElementById('weddingRate')?.value) || 95.14;
+  localStorage.setItem('fc_wedding_rate', rate);
+  let spentINR = 0;
+  for (const [y, m] of ALL_PERIODS) {
+    const entries = customEntries[getEntryKey(y, m)] || [];
+    entries.filter(e => e.category === 'Wedding').forEach(e => {
+      spentINR += e.amtINR || 0;
+    });
+  }
+  const remaining = Math.max(0, W_TARGET - spentINR);
+  const pct = Math.min(100, spentINR / W_TARGET * 100).toFixed(1);
+  const rEl = document.getElementById('weddingRemaining');
+  const sEl = document.getElementById('weddingSpent');
+  const pEl = document.getElementById('weddingPct');
+  if (rEl) rEl.textContent = fmtINR(remaining);
+  if (sEl) sEl.textContent = fmtINR(spentINR);
+  if (pEl) pEl.textContent = pct + '%';
+}
+
 // ---- Load from localStorage first ----
 function loadLocal() {
+  const sr = localStorage.getItem('fc_wedding_rate'); if (sr) { const el = document.getElementById('weddingRate'); if (el) el.value = sr; }
   try { checked = new Set(JSON.parse(localStorage.getItem('fc_checked')||'[]')); } catch(e){}
   try { customAmounts = JSON.parse(localStorage.getItem('fc_amounts')||'{}'); } catch(e){}
   try { customEntries = JSON.parse(localStorage.getItem('fc_entries')||'{}'); } catch(e){}
@@ -475,7 +543,7 @@ function setYear(y) {
   renderAll();
 }
 function setMonth(m) { curMonth=m; renderAll(); }
-function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); }
+function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); updateWedding(); }
 
 function renderTabs() {
   const tabs = document.getElementById('monthTabs');
