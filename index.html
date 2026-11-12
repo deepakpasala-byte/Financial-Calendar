@@ -343,6 +343,17 @@ ALL_ITEMS.forEach(i => {
     i.ef = true;
   }
 });
+// From Nov 2026, the Chase S amount on the same payday is folded into HYSA (Emergency Fund)
+// (e.g. $900 + $100 = $1,000) and the separate Chase S row is removed.
+const MERGED_CHASE = new Set();
+ALL_ITEMS.forEach(i => {
+  if (!i.ef) return;
+  const chase = ALL_ITEMS.find(x => x.id === i.id.replace(/_HYSA$/, '_Chase_S'));
+  if (chase) { i.amount += chase.amount; MERGED_CHASE.add(chase.id); }
+});
+for (let k = ALL_ITEMS.length - 1; k >= 0; k--) {
+  if (MERGED_CHASE.has(ALL_ITEMS[k].id)) ALL_ITEMS.splice(k, 1);
+}
 
 let checked = new Set();
 let customAmounts = {};
