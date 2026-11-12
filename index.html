@@ -113,6 +113,7 @@
   .cat-Withdrawals { background:var(--wd-bg); color:var(--wd-fg); }
   .cat-Wedding { background:#FFF0F5; color:#880E4F; }
   .cat-EF { background:var(--ef-bg); color:var(--ef-fg); }
+  .cat-track { background:#EEEEEE; color:#777; }
 
   .breakdown-section { padding:12px 12px 0; }
   .breakdown-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:8px; }
@@ -222,7 +223,7 @@
 </div>
 <div class="app-header">
   <div class="header-row">
-    <h1>FINANCIAL CALENDAR</h1>
+    <h1>FINANCIAL CALENDAR <span style="font-size:10px;font-weight:700;color:#C8E6C0;letter-spacing:0;vertical-align:middle">v4</span></h1>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="sync-btn" onclick="manualSync()" title="Sync now">
         <span id="syncIcon">☁️</span> Sync
@@ -343,17 +344,14 @@ ALL_ITEMS.forEach(i => {
     i.ef = true;
   }
 });
-// From Nov 2026, the Chase S amount on the same payday is folded into HYSA (Emergency Fund)
-// (e.g. $900 + $100 = $1,000) and the separate Chase S row is removed.
-const MERGED_CHASE = new Set();
+// From Nov 2026, Chase S stays on the calendar (you can still tick it) but its amount
+// is NOT counted anywhere: not High Savings, Net HYSA, Emergency Fund, or the day total.
 ALL_ITEMS.forEach(i => {
-  if (!i.ef) return;
-  const chase = ALL_ITEMS.find(x => x.id === i.id.replace(/_HYSA$/, '_Chase_S'));
-  if (chase) { i.amount += chase.amount; MERGED_CHASE.add(chase.id); }
+  if (i.label === 'Chase S' && i.year * 100 + i.month >= EF_START) {
+    i.category = '';
+    i.trackOnly = true;
+  }
 });
-for (let k = ALL_ITEMS.length - 1; k >= 0; k--) {
-  if (MERGED_CHASE.has(ALL_ITEMS[k].id)) ALL_ITEMS.splice(k, 1);
-}
 
 let checked = new Set();
 let customAmounts = {};
@@ -855,7 +853,7 @@ function renderCalendar() {
           <div style="flex:1;text-align:center;font-weight:700;font-size:14px;color:#92400E;">${it.label}</div>
         </div>`;
       }
-      const badge = it.ef ? `<span class="item-cat-badge cat-EF">Emergency Fund</span>` : `<span class="item-cat-badge ${catClass(it.category)}">${it.category}</span>`;
+      const badge = it.trackOnly ? `<span class="item-cat-badge cat-track">Not counted</span>` : it.ef ? `<span class="item-cat-badge cat-EF">Emergency Fund</span>` : `<span class="item-cat-badge ${catClass(it.category)}">${it.category}</span>`;
       return `<div class="item-row ${checked.has(it.id)?'checked':''}" data-id="${it.id}" onclick="toggleItem('${it.id}')">
         <div class="cb-wrap"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="item-info"><div class="item-label">${it.label}</div>${badge}</div>
@@ -864,7 +862,7 @@ function renderCalendar() {
     }).join('');
     return `<div class="day-group">
       <div class="day-header"><div><div class="day-label">${dn}, ${MONTHS[curMonth-1]} ${day}</div>
-      <div class="day-sub">${dayItems.length} item${dayItems.length>1?'s':''} · ${fmt(dayItems.reduce((s,i)=>s+getAmount(i.id,i.amount),0))}</div></div>
+      <div class="day-sub">${dayItems.length} item${dayItems.length>1?'s':''} · ${fmt(dayItems.filter(i=>!i.trackOnly).reduce((s,i)=>s+getAmount(i.id,i.amount),0))}</div></div>
       ${allDone?'<div class="day-dot"></div>':''}</div>${rows}</div>`;
   }).join('');
 }
