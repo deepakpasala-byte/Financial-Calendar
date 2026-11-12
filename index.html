@@ -114,6 +114,19 @@
   .cat-Wedding { background:#FFF0F5; color:#880E4F; }
   .cat-EF { background:var(--ef-bg); color:var(--ef-fg); }
   .cat-track { background:#EEEEEE; color:#777; }
+  .emi-card { grid-column:1/-1; background:var(--ind-bg); border:1px solid #FFCC80; border-radius:10px; padding:12px 14px; }
+  .emi-card .s-label { color:var(--ind-fg); opacity:1; }
+  .emi-card .s-amount { font-size:18px; }
+  .emi-q { display:flex; gap:10px; align-items:center; background:#fff; border:1.5px solid #FFCC80; border-radius:8px; padding:9px 10px; margin-top:8px; cursor:pointer; text-align:left; -webkit-tap-highlight-color:transparent; }
+  .emi-q .emi-cb { width:22px; height:22px; flex-shrink:0; border:2px solid #ccc; border-radius:6px; display:flex; align-items:center; justify-content:center; color:transparent; font-size:13px; font-weight:900; background:#fff; }
+  .emi-q b { font-size:13px; color:#1C1C1C; }
+  .emi-q small { font-size:10px; color:#8A5A1F; }
+  .emi-q.due { border-color:#C0392B; background:#FFF5F5; }
+  .emi-q.due small { color:#C0392B; font-weight:700; }
+  .emi-q.done { border-color:#C8E6C0; background:#F9FFF9; }
+  .emi-q.done .emi-cb { background:#2E7D32; border-color:#2E7D32; color:#fff; }
+  .emi-q.done b { text-decoration:line-through; color:#888; }
+  .emi-status { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
 
   .breakdown-section { padding:12px 12px 0; }
   .breakdown-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:8px; }
@@ -175,6 +188,27 @@
   .pin-btn.empty { border:none; background:transparent; pointer-events:none; }
   .pin-error { color:#C0392B; font-size:13px; margin-top:16px; opacity:0; transition:opacity 0.3s; }
   .pin-error.show { opacity:1; }
+  /* ---- Larger text (v7) ---- */
+  .s-label { font-size:11px; }
+  .s-amount { font-size:17px; }
+  .s-sub, .w-sub { font-size:11px; }
+  .ef-right, .ef-foot { font-size:12px; }
+  .ef-card .s-amount, .emi-card .s-amount { font-size:20px; }
+  .wedding-inline .s-amount { font-size:16px; }
+  .w-rate-row, .w-rate-row input, .w-cur-btn { font-size:11px; }
+  .month-tab { font-size:13px; }
+  .item-label, .item-amount { font-size:16px; }
+  .item-cat-badge, .ae-badge { font-size:11px; }
+  .day-label { font-size:15px; }
+  .day-sub { font-size:12px; }
+  .breakdown-cat-name { font-size:14px; }
+  .breakdown-total { font-size:12px; }
+  .breakdown-title, .add-entry-title { font-size:12px; }
+  .ae-label { font-size:14px; }
+  .emi-q b { font-size:15px; }
+  .emi-q small { font-size:12px; }
+  .emi-status { font-size:11px; }
+  .emi-note { font-size:12px; color:#8A5A1F; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -223,7 +257,7 @@
 </div>
 <div class="app-header">
   <div class="header-row">
-    <h1>FINANCIAL CALENDAR <span style="font-size:10px;font-weight:700;color:#C8E6C0;letter-spacing:0;vertical-align:middle">v4</span></h1>
+    <h1>FINANCIAL CALENDAR <span style="font-size:10px;font-weight:700;color:#C8E6C0;letter-spacing:0;vertical-align:middle">v9</span></h1>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="sync-btn" onclick="manualSync()" title="Sync now">
         <span id="syncIcon">☁️</span> Sync
@@ -262,6 +296,21 @@
     </div>
     <div class="ef-bar"><div class="ef-bar-fill" id="efBar" style="width:0%"></div></div>
     <div class="ef-foot">Counts checked "HYSA (Emergency Fund)" deposits (from Nov 2026) + HS (Emergency Fund) entries.</div>
+  </div>
+
+  <!-- India EMI buffer -->
+  <div class="emi-card">
+    <div class="ef-top">
+      <div>
+        <div class="s-label">🇮🇳 India EMI Buffer · $1,250 on the 10th</div>
+        <div class="w-sub">Covered through: <strong id="emiCovered">Jan 2027</strong></div>
+      </div>
+      <div class="ef-right" style="color:#8A5A1F">
+        <div>Next send: <strong id="emiNext">—</strong></div>
+        <div id="emiNextFor"></div>
+      </div>
+    </div>
+    <div id="emiQs"></div>
   </div>
 
   <div class="summary-card withdrawals" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;">
@@ -350,6 +399,20 @@ ALL_ITEMS.forEach(i => {
   if (i.label === 'Chase S' && i.year * 100 + i.month >= EF_START) {
     i.category = '';
     i.trackOnly = true;
+  }
+});
+
+// ---- India EMI ($1,250 on the 10th) with a 2-month buffer ----
+// The India transfer IS the EMI money. From Dec 2026, each month's India transfer
+// (first payday, same date as before) pays the EMI two months ahead: Dec → Feb, Jan → Mar, ...
+const EMI_AMOUNT = 1250;
+const EMI_START = 2026 * 100 + 12;
+ALL_ITEMS.forEach(i => {
+  if (i.category === 'India' && i.year * 100 + i.month >= EMI_START) {
+    const t = i.year * 12 + (i.month - 1) + 2;
+    i.emiFor = MONTHS[t % 12].slice(0, 3) + ' ' + Math.floor(t / 12);
+    i.label = 'India (EMI for ' + i.emiFor + ')';
+    i.emiSend = true;
   }
 });
 
@@ -534,6 +597,50 @@ function updateEmergencyFund() {
   document.getElementById('efRemaining').textContent = fmt(Math.max(0, EF_TARGET - saved));
   document.getElementById('efEta').textContent = eta;
   document.getElementById('efBar').style.width = pct + '%';
+}
+
+// ---- India EMI buffer ----
+// Starting point (Nov 2026): Dec 2026 and Jan 2027 EMIs already in the account.
+// Each ticked "Sent" extends coverage by one month. Buffer = covered months after the month you're viewing.
+function updateEmiBuffer() {
+  const idx = (y, m) => y * 12 + (m - 1);
+  const ym = i => i.year * 100 + i.month;
+  const viewYM = curYear * 100 + curMonth;
+  const sends = ALL_ITEMS.filter(i => i.emiSend).sort((a, b) => ym(a) - ym(b));
+  const coveredIdx = idx(2027, 1) + sends.filter(i => checked.has(i.id)).length;
+  const months = Math.max(0, coveredIdx - idx(curYear, curMonth));
+  const status = months >= 2 ? ['OK', '#2E7D32', '#C8E6C0'] : months === 1 ? ['LOW', '#B05A00', '#FFE0B2'] : ['EMPTY', '#C0392B', '#FDDEDE'];
+  const bufEl = document.getElementById('emiBuffer');
+  if (bufEl) bufEl.innerHTML = months + ' month' + (months === 1 ? '' : 's') + ' (' + fmt(months * EMI_AMOUNT) + ')' +
+    `<span class="emi-status" style="color:${status[1]};background:${status[2]}">${status[0]}</span>`;
+  document.getElementById('emiCovered').textContent = MONTHS[coveredIdx % 12].slice(0, 3) + ' ' + Math.floor(coveredIdx / 12);
+  const next = sends.find(i => !checked.has(i.id));
+  document.getElementById('emiNext').textContent = next ? MONTHS[next.month - 1].slice(0, 3) + ' ' + next.day + ', ' + next.year : 'All sent';
+  document.getElementById('emiNextFor').textContent = next ? 'EMI for ' + next.emiFor : '';
+
+  // One question per month, starting December 2026. A ticked question stays visible (checked);
+  // an unticked one from an earlier month carries over until you tick it.
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const when = i => {
+    const days = Math.round((new Date(i.year, i.month - 1, i.day) - today) / 86400000);
+    if (days > 1) return ['in ' + days + ' days', false];
+    if (days === 1) return ['tomorrow', true];
+    if (days === 0) return ['TODAY', true];
+    return ['OVERDUE by ' + (-days) + ' day' + (days === -1 ? '' : 's'), true];
+  };
+  let html = '';
+  if (viewYM < EMI_START) {
+    html = '<div class="emi-note">EMI questions start in December 2026 (for the Feb 2027 EMI).</div>';
+  } else {
+    sends.filter(i => ym(i) <= viewYM && (ym(i) === viewYM || !checked.has(i.id))).forEach(i => {
+      const done = checked.has(i.id), [w, urgent] = when(i);
+      const from = ym(i) < viewYM ? ' · carried over from ' + MONTHS[i.month - 1] : '';
+      html += `<div class="emi-q ${done ? 'done' : urgent ? 'due' : ''}" onclick="toggleItem('${i.id}')">
+        <span class="emi-cb">✓</span>
+        <span><b>Sent $1,250 for the ${i.emiFor} EMI?</b><br><small>${done ? 'Done ✓' : 'Send on ' + MONTHS[i.month - 1].slice(0, 3) + ' ' + i.day + from + ' · ' + w}</small></span></div>`;
+    });
+  }
+  document.getElementById('emiQs').innerHTML = html;
 }
 
 // ---- Load from localStorage first ----
@@ -730,7 +837,7 @@ function setYear(y) {
   renderAll();
 }
 function setMonth(m) { curMonth=m; renderAll(); }
-function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); updateWedding(); updateEmergencyFund(); }
+function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); updateWedding(); updateEmergencyFund(); updateEmiBuffer(); }
 
 function renderTabs() {
   const tabs = document.getElementById('monthTabs');
@@ -802,6 +909,7 @@ function renderSummary() {
   netEl.textContent=(netHYSA<0?'-':'')+fmt(netHYSA);
   netEl.style.color=netHYSA<0?'#C0392B':'#2E7D32';
   updateEmergencyFund();
+  updateEmiBuffer();
 }
 
 function renderBreakdown() {
@@ -836,7 +944,7 @@ function renderBreakdown() {
 
 function renderCalendar() {
   const section=document.getElementById('calendarSection');
-  const items=getMonthItems(curYear,curMonth);
+  const items=getMonthItems(curYear,curMonth).filter(i=>!i.emiDebit); // EMI debit is asked on the EMI card instead
   if(!items.length){section.innerHTML='<p style="padding:20px;color:#888;text-align:center">No items this month.</p>';return;}
   const byDay={};
   items.forEach(it=>{if(!byDay[it.day])byDay[it.day]=[];byDay[it.day].push(it);});
@@ -853,7 +961,7 @@ function renderCalendar() {
           <div style="flex:1;text-align:center;font-weight:700;font-size:14px;color:#92400E;">${it.label}</div>
         </div>`;
       }
-      const badge = it.trackOnly ? `<span class="item-cat-badge cat-track">Not counted</span>` : it.ef ? `<span class="item-cat-badge cat-EF">Emergency Fund</span>` : `<span class="item-cat-badge ${catClass(it.category)}">${it.category}</span>`;
+      const badge = it.trackOnly ? `<span class="item-cat-badge cat-track">${it.badge || 'Not counted'}</span>` : it.ef ? `<span class="item-cat-badge cat-EF">Emergency Fund</span>` : `<span class="item-cat-badge ${catClass(it.category)}">${it.category}</span>`;
       return `<div class="item-row ${checked.has(it.id)?'checked':''}" data-id="${it.id}" onclick="toggleItem('${it.id}')">
         <div class="cb-wrap"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <div class="item-info"><div class="item-label">${it.label}</div>${badge}</div>
