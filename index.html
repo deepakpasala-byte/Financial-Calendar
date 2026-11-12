@@ -13,6 +13,7 @@
     --ind-bg:#FFE8CC; --ind-fg:#B05A00;
     --hs-bg:#C8E6C0;  --hs-fg:#2E7D32;
     --wd-bg:#FDDEDE;  --wd-fg:#C0392B;
+    --ef-bg:#E0F2F1;  --ef-fg:#00695C;
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:env(safe-area-inset-bottom,0px); }
@@ -55,7 +56,7 @@
   .summary-card.investment { background:var(--inv-bg); }
   .summary-card.india { background:var(--ind-bg); }
   .summary-card.hysa { background:var(--hs-bg); }
-  .summary-card.withdrawals { background:var(--wd-bg); grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
+  .summary-card.withdrawals { background:var(--wd-bg); grid-column:1/-1; }
   .s-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; opacity:0.7; }
   .s-amount { font-size:14px; font-weight:800; margin-top:2px; }
   .s-sub { font-size:9px; opacity:0.6; margin-top:1px; }
@@ -64,22 +65,26 @@
   .summary-card.india .s-amount { color:var(--ind-fg); }
   .summary-card.hysa .s-amount { color:var(--hs-fg); }
   .summary-card.withdrawals .s-amount { color:var(--wd-fg); }
-  .wd-right { text-align:right; }
-  .wd-right .s-amount { color:var(--hs-fg); }
   /* Wedding tracker inline */
-  .summary-card.withdrawals { flex-wrap: wrap; gap: 0; }
-  .wd-section { flex: 1; min-width: 120px; }
-  .wedding-inline { flex: 1; min-width: 160px; background: #FFF0F5; border-radius: 8px; padding: 8px 10px; border: 1px solid #F8BBD0; margin-left: 10px; }
+  .wedding-inline { min-width: 140px; background: #FFF0F5; border-radius: 8px; padding: 8px 10px; border: 1px solid #F8BBD0; }
   .wedding-inline .s-label { color: #880E4F; }
   .wedding-inline .s-amount { color: #880E4F; font-size: 13px; }
   .w-sub { font-size: 9px; color: #888; margin-top: 1px; }
-  .w-rate-row { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #aaa; margin-top: 5px; }
+  .w-rate-row { display: flex; align-items: center; justify-content:center; gap: 4px; font-size: 9px; color: #aaa; margin-top: 5px; }
   .w-rate-row input { width: 50px; border: 1px solid #ddd; border-radius: 4px; padding: 2px 4px; font-size: 9px; font-weight: 600; text-align: center; outline: none; }
   .w-rate-row input:focus { border-color: #880E4F; }
   .w-cur-toggle { display: flex; gap: 4px; margin-top: 5px; }
   .w-cur-btn { flex: 1; border: 1px solid #ddd; background: #fff; border-radius: 4px; padding: 3px; font-size: 9px; font-weight: 700; cursor: pointer; color: #888; }
   .w-cur-btn.active { background: #880E4F; color: white; border-color: #880E4F; }
-  .cat-Wedding { background: #FFF0F5; color: #880E4F; }
+  /* Emergency fund tracker */
+  .ef-card { grid-column:1/-1; background:var(--ef-bg); border:1px solid #B2DFDB; border-radius:10px; padding:12px 14px; }
+  .ef-top { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
+  .ef-card .s-label { color:var(--ef-fg); opacity:1; }
+  .ef-card .s-amount { color:var(--ef-fg); font-size:18px; }
+  .ef-right { text-align:right; font-size:10px; color:#4D7C78; line-height:1.5; }
+  .ef-bar { height:8px; background:#fff; border-radius:4px; overflow:hidden; margin-top:8px; }
+  .ef-bar-fill { height:100%; background:var(--ef-fg); border-radius:4px; transition:width 0.4s; }
+  .ef-foot { font-size:10px; color:#4D7C78; margin-top:6px; }
 
   .add-entry-box { margin:12px 12px 0; background:white; border-radius:14px; border:1.5px solid var(--border); padding:14px; }
   .add-entry-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:10px; }
@@ -106,6 +111,8 @@
   .cat-India { background:var(--ind-bg); color:var(--ind-fg); }
   .cat-High-Savings { background:var(--hs-bg); color:var(--hs-fg); }
   .cat-Withdrawals { background:var(--wd-bg); color:var(--wd-fg); }
+  .cat-Wedding { background:#FFF0F5; color:#880E4F; }
+  .cat-EF { background:var(--ef-bg); color:var(--ef-fg); }
 
   .breakdown-section { padding:12px 12px 0; }
   .breakdown-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:8px; }
@@ -153,9 +160,6 @@
   .btn-cancel { background:#F0EDE8; color:var(--text); }
   .btn-save { background:var(--purple); color:white; }
 
-  .spinner { display:inline-block; width:10px; height:10px; border:2px solid #555; border-top-color:#aaa; border-radius:50%; animation:spin 0.6s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-
   .pin-overlay { position:fixed; inset:0; background:linear-gradient(135deg,#E8D5F0,#C8E6C0,#D5E8F0); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
   .pin-box { text-align:center; }
   .pin-box h2 { color:#2D2D2D; font-size:22px; font-weight:700; margin-bottom:6px; letter-spacing:1px; }
@@ -182,7 +186,7 @@
     <ol>
       <li>Open your Google Sheet</li>
       <li>Click <strong>Extensions → Apps Script</strong></li>
-      <li>Paste the Apps Script code (from the JS file)</li>
+      <li>Paste the Apps Script code (from the .gs file)</li>
       <li>Click <strong>Deploy → New Deployment → Web App</strong></li>
       <li>Set access to <strong>"Anyone"</strong> → Deploy</li>
       <li>Copy the Web App URL and paste below</li>
@@ -198,10 +202,7 @@
   <div class="pin-box">
     <h2>FINANCIAL CALENDAR</h2>
     <p>Enter your PIN to continue</p>
-    <div class="pin-dots">
-      <div class="pin-dot" id="dot0"></div>
-      <div class="pin-dot" id="dot1"></div>
-    </div>
+    <div class="pin-dots" id="pinDots"></div>
     <div class="pin-pad">
       <button class="pin-btn" onclick="pinPress('1')">1</button>
       <button class="pin-btn" onclick="pinPress('2')">2</button>
@@ -244,6 +245,24 @@
   <div class="summary-card investment"><div class="s-label">Investment</div><div class="s-amount" id="sum-Investment">$0</div><div class="s-sub" id="sub-Investment">of $0 YTD</div></div>
   <div class="summary-card india"><div class="s-label">India</div><div class="s-amount" id="sum-India">$0</div><div class="s-sub" id="sub-India">of $0</div></div>
   <div class="summary-card hysa"><div class="s-label">High Savings</div><div class="s-amount" id="sum-High Savings">$0</div><div class="s-sub" id="sub-High Savings">of $0 YTD</div></div>
+
+  <!-- Emergency fund tracker -->
+  <div class="ef-card">
+    <div class="ef-top">
+      <div>
+        <div class="s-label">🛟 HS (Emergency Fund)</div>
+        <div class="s-amount" id="efSaved">$0</div>
+        <div class="w-sub">saved of $18,000 · <span id="efPct">0%</span></div>
+      </div>
+      <div class="ef-right">
+        <div>Remaining: <strong id="efRemaining">$18,000</strong></div>
+        <div>On plan to hit target: <strong id="efEta">—</strong></div>
+      </div>
+    </div>
+    <div class="ef-bar"><div class="ef-bar-fill" id="efBar" style="width:0%"></div></div>
+    <div class="ef-foot">Counts checked "HYSA (Emergency Fund)" deposits (from Nov 2026) + HS (Emergency Fund) entries.</div>
+  </div>
+
   <div class="summary-card withdrawals" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;">
     <div style="display:flex;flex-direction:column;gap:8px;">
       <div><div class="s-label">Withdrawals from HYSA</div><div class="s-amount" id="sum-Withdrawals">$0</div></div>
@@ -272,6 +291,7 @@
       <option value="Investment">Investment</option>
       <option value="India">India</option>
       <option value="High Savings">High Savings</option>
+      <option value="HS (Emergency Fund)">HS (Emergency Fund)</option>
       <option value="Withdrawals">Withdrawal (from HYSA)</option>
       <option value="Wedding">Wedding 💍</option>
     </select>
@@ -303,10 +323,26 @@
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const CATS = ['Expenses','Investment','India','High Savings'];
-const CAT_COLORS = {'Expenses':'#6A4C93','Investment':'#2C6E8A','India':'#B05A00','High Savings':'#2E7D32','Withdrawals':'#C0392B'};
+const EF_CAT = 'HS (Emergency Fund)';
+const CAT_COLORS = {'Expenses':'#6A4C93','Investment':'#2C6E8A','India':'#B05A00','High Savings':'#2E7D32','Withdrawals':'#C0392B','Wedding':'#880E4F','HS (Emergency Fund)':'#00695C'};
+const CAT_CLASS = {'Expenses':'cat-Expenses','Investment':'cat-Investment','India':'cat-India','High Savings':'cat-High-Savings','Withdrawals':'cat-Withdrawals','Wedding':'cat-Wedding','HS (Emergency Fund)':'cat-EF'};
+function catClass(c) { return CAT_CLASS[c] || ''; }
+// An HS (Emergency Fund) entry is money going into the HYSA, so it also counts toward High Savings.
+function inCat(entryCat, cat) { return entryCat === cat || (cat === 'High Savings' && entryCat === EF_CAT); }
 const VALID = {2026:[10,11,12], 2027:[1,2,3,4,5,6,7,8,9,10,11,12]};
 const ALL_PERIODS = [[2026,10],[2026,11],[2026,12],[2027,1],[2027,2],[2027,3],[2027,4],[2027,5],[2027,6],[2027,7],[2027,8],[2027,9],[2027,10],[2027,11],[2027,12]];
 const ALL_ITEMS = [{"id":"m202610d1_Rent","year":2026,"month":10,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m202610d1_Utilities","year":2026,"month":10,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m202610d1_Charging","year":2026,"month":10,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m202610d3_Car_EMI","year":2026,"month":10,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m202610d8_Car_Wash","year":2026,"month":10,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m202610d8_pay0_India","year":2026,"month":10,"day":8,"label":"India","category":"India","amount":1250},{"id":"m202610d8_pay0_HYSA","year":2026,"month":10,"day":8,"label":"HYSA","category":"High Savings","amount":900},{"id":"m202610d8_pay0_Cap_One","year":2026,"month":10,"day":8,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202610d8_pay0_Chase_S","year":2026,"month":10,"day":8,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202610d14_Fidelity","year":2026,"month":10,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m202610d15_Claude","year":2026,"month":10,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m202610d22_pay1_HYSA","year":2026,"month":10,"day":22,"label":"HYSA","category":"High Savings","amount":700},{"id":"m202610d22_pay1_Cap_One","year":2026,"month":10,"day":22,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202610d22_pay1_Chase_S","year":2026,"month":10,"day":22,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202610d22_pay1_Chase_C","year":2026,"month":10,"day":22,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m202610d24_ChatGPT","year":2026,"month":10,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m202610d30_Car_Insurance","year":2026,"month":10,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202611d1_Rent","year":2026,"month":11,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m202611d1_Utilities","year":2026,"month":11,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m202611d1_Charging","year":2026,"month":11,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m202611d3_Car_EMI","year":2026,"month":11,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m202611d5_pay0_India","year":2026,"month":11,"day":5,"label":"India","category":"India","amount":1250},{"id":"m202611d5_pay0_HYSA","year":2026,"month":11,"day":5,"label":"HYSA","category":"High Savings","amount":900},{"id":"m202611d5_pay0_Cap_One","year":2026,"month":11,"day":5,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202611d5_pay0_Chase_S","year":2026,"month":11,"day":5,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202611d8_Car_Wash","year":2026,"month":11,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m202611d14_Fidelity","year":2026,"month":11,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m202611d15_Claude","year":2026,"month":11,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m202611d19_pay1_HYSA","year":2026,"month":11,"day":19,"label":"HYSA","category":"High Savings","amount":700},{"id":"m202611d19_pay1_Cap_One","year":2026,"month":11,"day":19,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202611d19_pay1_Chase_S","year":2026,"month":11,"day":19,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202611d19_pay1_Chase_C","year":2026,"month":11,"day":19,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m202611d24_ChatGPT","year":2026,"month":11,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m202611d30_Car_Insurance","year":2026,"month":11,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202612d1_Rent","year":2026,"month":12,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m202612d1_Utilities","year":2026,"month":12,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m202612d1_Charging","year":2026,"month":12,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m202612d3_Car_EMI","year":2026,"month":12,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m202612d3_pay0_India","year":2026,"month":12,"day":3,"label":"India","category":"India","amount":1250},{"id":"m202612d3_pay0_HYSA","year":2026,"month":12,"day":3,"label":"HYSA","category":"High Savings","amount":900},{"id":"m202612d3_pay0_Cap_One","year":2026,"month":12,"day":3,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202612d3_pay0_Chase_S","year":2026,"month":12,"day":3,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202612d8_Car_Wash","year":2026,"month":12,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m202612d14_Fidelity","year":2026,"month":12,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m202612d15_Claude","year":2026,"month":12,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m202612d17_pay1_HYSA","year":2026,"month":12,"day":17,"label":"HYSA","category":"High Savings","amount":700},{"id":"m202612d17_pay1_Cap_One","year":2026,"month":12,"day":17,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202612d17_pay1_Chase_S","year":2026,"month":12,"day":17,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202612d17_pay1_Chase_C","year":2026,"month":12,"day":17,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m202612d24_ChatGPT","year":2026,"month":12,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m202612d30_Car_Insurance","year":2026,"month":12,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202612d31_pay2_HYSA","year":2026,"month":12,"day":31,"label":"HYSA","category":"High Savings","amount":2450},{"id":"m202612d31_pay2_Cap_One","year":2026,"month":12,"day":31,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20271d1_Rent","year":2027,"month":1,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20271d1_Utilities","year":2027,"month":1,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20271d1_Charging","year":2027,"month":1,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20271d3_Car_EMI","year":2027,"month":1,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20271d8_Car_Wash","year":2027,"month":1,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20271d14_Fidelity","year":2027,"month":1,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20271d14_pay0_India","year":2027,"month":1,"day":14,"label":"India","category":"India","amount":1250},{"id":"m20271d14_pay0_HYSA","year":2027,"month":1,"day":14,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20271d14_pay0_Cap_One","year":2027,"month":1,"day":14,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20271d14_pay0_Chase_S","year":2027,"month":1,"day":14,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20271d15_Claude","year":2027,"month":1,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20271d24_ChatGPT","year":2027,"month":1,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20271d28_pay1_HYSA","year":2027,"month":1,"day":28,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20271d28_pay1_Cap_One","year":2027,"month":1,"day":28,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20271d28_pay1_Chase_S","year":2027,"month":1,"day":28,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20271d28_pay1_Chase_C","year":2027,"month":1,"day":28,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20271d30_Car_Insurance","year":2027,"month":1,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20272d1_Rent","year":2027,"month":2,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20272d1_Utilities","year":2027,"month":2,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20272d1_Charging","year":2027,"month":2,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20272d3_Car_EMI","year":2027,"month":2,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20272d8_Car_Wash","year":2027,"month":2,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20272d11_pay0_India","year":2027,"month":2,"day":11,"label":"India","category":"India","amount":1250},{"id":"m20272d11_pay0_HYSA","year":2027,"month":2,"day":11,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20272d11_pay0_Cap_One","year":2027,"month":2,"day":11,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20272d11_pay0_Chase_S","year":2027,"month":2,"day":11,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20272d14_Fidelity","year":2027,"month":2,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20272d15_Claude","year":2027,"month":2,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20272d24_ChatGPT","year":2027,"month":2,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20272d25_pay1_HYSA","year":2027,"month":2,"day":25,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20272d25_pay1_Cap_One","year":2027,"month":2,"day":25,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20272d25_pay1_Chase_S","year":2027,"month":2,"day":25,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20272d25_pay1_Chase_C","year":2027,"month":2,"day":25,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20273d1_Rent","year":2027,"month":3,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20273d1_Utilities","year":2027,"month":3,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20273d1_Charging","year":2027,"month":3,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20273d3_Car_EMI","year":2027,"month":3,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20273d8_Car_Wash","year":2027,"month":3,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20273d11_pay0_India","year":2027,"month":3,"day":11,"label":"India","category":"India","amount":1250},{"id":"m20273d11_pay0_HYSA","year":2027,"month":3,"day":11,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20273d11_pay0_Cap_One","year":2027,"month":3,"day":11,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20273d11_pay0_Chase_S","year":2027,"month":3,"day":11,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20273d14_Fidelity","year":2027,"month":3,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20273d15_Claude","year":2027,"month":3,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20273d24_ChatGPT","year":2027,"month":3,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20273d25_pay1_HYSA","year":2027,"month":3,"day":25,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20273d25_pay1_Cap_One","year":2027,"month":3,"day":25,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20273d25_pay1_Chase_S","year":2027,"month":3,"day":25,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20273d25_pay1_Chase_C","year":2027,"month":3,"day":25,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20273d30_Car_Insurance","year":2027,"month":3,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20274d1_Rent","year":2027,"month":4,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20274d1_Utilities","year":2027,"month":4,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20274d1_Charging","year":2027,"month":4,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20274d3_Car_EMI","year":2027,"month":4,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20274d8_Car_Wash","year":2027,"month":4,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20274d8_pay0_India","year":2027,"month":4,"day":8,"label":"India","category":"India","amount":1250},{"id":"m20274d8_pay0_HYSA","year":2027,"month":4,"day":8,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20274d8_pay0_Cap_One","year":2027,"month":4,"day":8,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20274d8_pay0_Chase_S","year":2027,"month":4,"day":8,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20274d14_Fidelity","year":2027,"month":4,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20274d15_Claude","year":2027,"month":4,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20274d22_pay1_HYSA","year":2027,"month":4,"day":22,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20274d22_pay1_Cap_One","year":2027,"month":4,"day":22,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20274d22_pay1_Chase_S","year":2027,"month":4,"day":22,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20274d22_pay1_Chase_C","year":2027,"month":4,"day":22,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20274d24_ChatGPT","year":2027,"month":4,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20274d30_Car_Insurance","year":2027,"month":4,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20275d1_Rent","year":2027,"month":5,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20275d1_Utilities","year":2027,"month":5,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20275d1_Charging","year":2027,"month":5,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20275d3_Car_EMI","year":2027,"month":5,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20275d6_pay0_India","year":2027,"month":5,"day":6,"label":"India","category":"India","amount":1250},{"id":"m20275d6_pay0_HYSA","year":2027,"month":5,"day":6,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20275d6_pay0_Cap_One","year":2027,"month":5,"day":6,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20275d6_pay0_Chase_S","year":2027,"month":5,"day":6,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20275d8_Car_Wash","year":2027,"month":5,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20275d14_Fidelity","year":2027,"month":5,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20275d15_Claude","year":2027,"month":5,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20275d20_pay1_HYSA","year":2027,"month":5,"day":20,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20275d20_pay1_Cap_One","year":2027,"month":5,"day":20,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20275d20_pay1_Chase_S","year":2027,"month":5,"day":20,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20275d20_pay1_Chase_C","year":2027,"month":5,"day":20,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20275d22_Cancel_Claude_Sub.","year":2027,"month":5,"day":22,"label":"Cancel Claude Sub.","category":"Expenses","amount":20},{"id":"m20275d24_ChatGPT","year":2027,"month":5,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20275d30_Car_Insurance","year":2027,"month":5,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20276d1_Rent","year":2027,"month":6,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20276d1_Utilities","year":2027,"month":6,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20276d1_Charging","year":2027,"month":6,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20276d3_Car_EMI","year":2027,"month":6,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20276d3_pay0_India","year":2027,"month":6,"day":3,"label":"India","category":"India","amount":1250},{"id":"m20276d3_pay0_HYSA","year":2027,"month":6,"day":3,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20276d3_pay0_Cap_One","year":2027,"month":6,"day":3,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20276d3_pay0_Chase_S","year":2027,"month":6,"day":3,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20276d8_Car_Wash","year":2027,"month":6,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20276d14_Fidelity","year":2027,"month":6,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20276d15_Claude","year":2027,"month":6,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20276d17_pay1_HYSA","year":2027,"month":6,"day":17,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20276d17_pay1_Cap_One","year":2027,"month":6,"day":17,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20276d17_pay1_Chase_S","year":2027,"month":6,"day":17,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20276d17_pay1_Chase_C","year":2027,"month":6,"day":17,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20276d24_ChatGPT","year":2027,"month":6,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20276d30_Car_Insurance","year":2027,"month":6,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20277d1_Rent","year":2027,"month":7,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20277d1_Utilities","year":2027,"month":7,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20277d1_Charging","year":2027,"month":7,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20277d1_pay0_India","year":2027,"month":7,"day":1,"label":"India","category":"India","amount":1250},{"id":"m20277d1_pay0_HYSA","year":2027,"month":7,"day":1,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20277d1_pay0_Cap_One","year":2027,"month":7,"day":1,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20277d1_pay0_Chase_S","year":2027,"month":7,"day":1,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20277d3_Car_EMI","year":2027,"month":7,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20277d8_Car_Wash","year":2027,"month":7,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20277d14_Fidelity","year":2027,"month":7,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20277d15_Claude","year":2027,"month":7,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20277d15_pay1_HYSA","year":2027,"month":7,"day":15,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20277d15_pay1_Cap_One","year":2027,"month":7,"day":15,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20277d15_pay1_Chase_S","year":2027,"month":7,"day":15,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20277d15_pay1_Chase_C","year":2027,"month":7,"day":15,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20277d24_ChatGPT","year":2027,"month":7,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20277d29_pay2_HYSA","year":2027,"month":7,"day":29,"label":"HYSA","category":"High Savings","amount":2450},{"id":"m20277d29_pay2_Cap_One","year":2027,"month":7,"day":29,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20277d30_Car_Insurance","year":2027,"month":7,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20278d1_Rent","year":2027,"month":8,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20278d1_Utilities","year":2027,"month":8,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20278d1_Charging","year":2027,"month":8,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20278d3_Car_EMI","year":2027,"month":8,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20278d8_Car_Wash","year":2027,"month":8,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20278d12_pay0_India","year":2027,"month":8,"day":12,"label":"India","category":"India","amount":1250},{"id":"m20278d12_pay0_HYSA","year":2027,"month":8,"day":12,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20278d12_pay0_Cap_One","year":2027,"month":8,"day":12,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20278d12_pay0_Chase_S","year":2027,"month":8,"day":12,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20278d14_Fidelity","year":2027,"month":8,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20278d15_Claude","year":2027,"month":8,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20278d24_ChatGPT","year":2027,"month":8,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20278d26_pay1_HYSA","year":2027,"month":8,"day":26,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20278d26_pay1_Cap_One","year":2027,"month":8,"day":26,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20278d26_pay1_Chase_S","year":2027,"month":8,"day":26,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20278d26_pay1_Chase_C","year":2027,"month":8,"day":26,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20278d30_Car_Insurance","year":2027,"month":8,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m20279d1_Rent","year":2027,"month":9,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m20279d1_Utilities","year":2027,"month":9,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m20279d1_Charging","year":2027,"month":9,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m20279d3_Car_EMI","year":2027,"month":9,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m20279d8_Car_Wash","year":2027,"month":9,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m20279d9_pay0_India","year":2027,"month":9,"day":9,"label":"India","category":"India","amount":1250},{"id":"m20279d9_pay0_HYSA","year":2027,"month":9,"day":9,"label":"HYSA","category":"High Savings","amount":900},{"id":"m20279d9_pay0_Cap_One","year":2027,"month":9,"day":9,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20279d9_pay0_Chase_S","year":2027,"month":9,"day":9,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20279d14_Fidelity","year":2027,"month":9,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m20279d15_Claude","year":2027,"month":9,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m20279d23_pay1_HYSA","year":2027,"month":9,"day":23,"label":"HYSA","category":"High Savings","amount":700},{"id":"m20279d23_pay1_Cap_One","year":2027,"month":9,"day":23,"label":"Cap One","category":"Expenses","amount":300},{"id":"m20279d23_pay1_Chase_S","year":2027,"month":9,"day":23,"label":"Chase S","category":"High Savings","amount":100},{"id":"m20279d23_pay1_Chase_C","year":2027,"month":9,"day":23,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m20279d24_ChatGPT","year":2027,"month":9,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m20279d30_Car_Insurance","year":2027,"month":9,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202710d1_Rent","year":2027,"month":10,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m202710d1_Utilities","year":2027,"month":10,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m202710d1_Charging","year":2027,"month":10,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m202710d3_Car_EMI","year":2027,"month":10,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m202710d7_pay0_India","year":2027,"month":10,"day":7,"label":"India","category":"India","amount":1250},{"id":"m202710d7_pay0_HYSA","year":2027,"month":10,"day":7,"label":"HYSA","category":"High Savings","amount":900},{"id":"m202710d7_pay0_Cap_One","year":2027,"month":10,"day":7,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202710d7_pay0_Chase_S","year":2027,"month":10,"day":7,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202710d8_Car_Wash","year":2027,"month":10,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m202710d14_Fidelity","year":2027,"month":10,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m202710d15_Claude","year":2027,"month":10,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m202710d21_pay1_HYSA","year":2027,"month":10,"day":21,"label":"HYSA","category":"High Savings","amount":700},{"id":"m202710d21_pay1_Cap_One","year":2027,"month":10,"day":21,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202710d21_pay1_Chase_S","year":2027,"month":10,"day":21,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202710d21_pay1_Chase_C","year":2027,"month":10,"day":21,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m202710d24_ChatGPT","year":2027,"month":10,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m202710d30_Car_Insurance","year":2027,"month":10,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202711d1_Rent","year":2027,"month":11,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m202711d1_Utilities","year":2027,"month":11,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m202711d1_Charging","year":2027,"month":11,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m202711d3_Car_EMI","year":2027,"month":11,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m202711d4_pay0_India","year":2027,"month":11,"day":4,"label":"India","category":"India","amount":1250},{"id":"m202711d4_pay0_HYSA","year":2027,"month":11,"day":4,"label":"HYSA","category":"High Savings","amount":900},{"id":"m202711d4_pay0_Cap_One","year":2027,"month":11,"day":4,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202711d4_pay0_Chase_S","year":2027,"month":11,"day":4,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202711d8_Car_Wash","year":2027,"month":11,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m202711d14_Fidelity","year":2027,"month":11,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m202711d15_Claude","year":2027,"month":11,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m202711d18_pay1_HYSA","year":2027,"month":11,"day":18,"label":"HYSA","category":"High Savings","amount":700},{"id":"m202711d18_pay1_Cap_One","year":2027,"month":11,"day":18,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202711d18_pay1_Chase_S","year":2027,"month":11,"day":18,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202711d18_pay1_Chase_C","year":2027,"month":11,"day":18,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m202711d24_ChatGPT","year":2027,"month":11,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m202711d30_Car_Insurance","year":2027,"month":11,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202712d1_Rent","year":2027,"month":12,"day":1,"label":"Rent","category":"Expenses","amount":750},{"id":"m202712d1_Utilities","year":2027,"month":12,"day":1,"label":"Utilities","category":"Expenses","amount":120},{"id":"m202712d1_Charging","year":2027,"month":12,"day":1,"label":"Charging","category":"Expenses","amount":30},{"id":"m202712d2_pay0_India","year":2027,"month":12,"day":2,"label":"India","category":"India","amount":1250},{"id":"m202712d2_pay0_HYSA","year":2027,"month":12,"day":2,"label":"HYSA","category":"High Savings","amount":900},{"id":"m202712d2_pay0_Cap_One","year":2027,"month":12,"day":2,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202712d2_pay0_Chase_S","year":2027,"month":12,"day":2,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202712d3_Car_EMI","year":2027,"month":12,"day":3,"label":"Car EMI","category":"Expenses","amount":570},{"id":"m202712d8_Car_Wash","year":2027,"month":12,"day":8,"label":"Car Wash","category":"Expenses","amount":20},{"id":"m202712d14_Fidelity","year":2027,"month":12,"day":14,"label":"Fidelity","category":"Investment","amount":200},{"id":"m202712d15_Claude","year":2027,"month":12,"day":15,"label":"Claude","category":"Expenses","amount":20},{"id":"m202712d16_pay1_HYSA","year":2027,"month":12,"day":16,"label":"HYSA","category":"High Savings","amount":700},{"id":"m202712d16_pay1_Cap_One","year":2027,"month":12,"day":16,"label":"Cap One","category":"Expenses","amount":300},{"id":"m202712d16_pay1_Chase_S","year":2027,"month":12,"day":16,"label":"Chase S","category":"High Savings","amount":100},{"id":"m202712d16_pay1_Chase_C","year":2027,"month":12,"day":16,"label":"Chase C - $1,650","category":"","amount":0},{"id":"m202712d24_ChatGPT","year":2027,"month":12,"day":24,"label":"ChatGPT","category":"Expenses","amount":20},{"id":"m202712d30_Car_Insurance","year":2027,"month":12,"day":30,"label":"Car Insurance","category":"Expenses","amount":200},{"id":"m202712d30_pay2_HYSA","year":2027,"month":12,"day":30,"label":"HYSA","category":"High Savings","amount":2450},{"id":"m202712d30_pay2_Cap_One","year":2027,"month":12,"day":30,"label":"Cap One","category":"Expenses","amount":300}];
+
+// ---- Emergency fund: HYSA deposits from Nov 2026 onward are relabelled ----
+// IDs are NOT changed, so existing checkmarks and edited amounts carry over.
+const EF_TARGET = 18000;
+const EF_START = 2026 * 100 + 11; // November 2026
+ALL_ITEMS.forEach(i => {
+  if (i.label === 'HYSA' && i.year * 100 + i.month >= EF_START) {
+    i.label = 'HYSA (Emergency Fund)';
+    i.ef = true;
+  }
+});
 
 let checked = new Set();
 let customAmounts = {};
@@ -315,42 +351,112 @@ let curYear = 2026;
 let curMonth = 10;
 let sheetUrl = '';
 let syncTimeout = null;
+let pendingSync = false;
 
 
 // ---- PIN Lock ----
-const CORRECT_PIN = '15';
-const SECRET_TOKEN = 'fc_deepak_15';
+// The PIN itself is no longer in this file — only its SHA-256 hash.
+// To change the PIN: set PIN_LENGTH, put the new hash in PIN_HASH,
+// and set APP_PIN in the Apps Script to the same PIN.
+const PIN_LENGTH = 2;
+const PIN_HASH = 'e629fa6598d732768f7c726b4b621285f9c3b85303900aa912017db7617d8bdb';
 let pinEntry = '';
+let appPin = ''; // held in memory only after a correct PIN; sent to Sheets with each request
 
-function pinPress(digit) {
-  if (pinEntry.length >= 2) return;
-  pinEntry += digit;
-  document.getElementById('dot' + (pinEntry.length-1)).classList.add('filled');
-  if (pinEntry.length === 2) {
-    setTimeout(checkPin, 150);
+function buildPinDots() {
+  document.getElementById('pinDots').innerHTML =
+    Array.from({length: PIN_LENGTH}, (_, i) => `<div class="pin-dot" id="dot${i}"></div>`).join('');
+}
+function paintPinDots() {
+  for (let i = 0; i < PIN_LENGTH; i++) {
+    document.getElementById('dot' + i).classList.toggle('filled', i < pinEntry.length);
   }
 }
-
+function pinPress(digit) {
+  if (pinEntry.length >= PIN_LENGTH) return;
+  pinEntry += digit;
+  paintPinDots();
+  if (pinEntry.length === PIN_LENGTH) setTimeout(checkPin, 150);
+}
 function pinDel() {
   if (pinEntry.length === 0) return;
-  document.getElementById('dot' + (pinEntry.length-1)).classList.remove('filled');
   pinEntry = pinEntry.slice(0, -1);
+  paintPinDots();
 }
-
-function checkPin() {
-  if (pinEntry === CORRECT_PIN) {
+async function checkPin() {
+  const attempt = pinEntry;
+  const hash = await sha256Hex(attempt);
+  pinEntry = '';
+  paintPinDots();
+  if (hash === PIN_HASH) {
+    appPin = attempt;
     document.getElementById('pinOverlay').style.display = 'none';
+    onUnlocked();
   } else {
     document.getElementById('pinError').classList.add('show');
-    // Shake dots
-    pinEntry = '';
-    document.getElementById('dot0').classList.remove('filled');
-    document.getElementById('dot1').classList.remove('filled');
     setTimeout(() => document.getElementById('pinError').classList.remove('show'), 2000);
   }
 }
+document.addEventListener('keydown', e => {
+  if (document.getElementById('pinOverlay').style.display === 'none') return;
+  if (/^[0-9]$/.test(e.key)) pinPress(e.key);
+  if (e.key === 'Backspace') pinDel();
+});
 
-// Add token to all sync requests
+async function sha256Hex(str) {
+  try {
+    if (window.crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  return sha256Fallback(str); // for browsers that block crypto.subtle (e.g. some file:// pages)
+}
+function sha256Fallback(ascii) {
+  const rotr = (v, n) => (v >>> n) | (v << (32 - n));
+  const K = [], H = [];
+  for (let p = 2, c = 0; c < 64; p++) {
+    let prime = true;
+    for (let f = 2; f * f <= p; f++) if (p % f === 0) { prime = false; break; }
+    if (!prime) continue;
+    if (c < 8) H[c] = (Math.pow(p, 1 / 2) * 4294967296) | 0;
+    K[c++] = (Math.pow(p, 1 / 3) * 4294967296) | 0;
+  }
+  const bytes = [...unescape(encodeURIComponent(ascii))].map(ch => ch.charCodeAt(0));
+  const bitLen = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  bytes.push(0, 0, 0, 0, (bitLen >>> 24) & 255, (bitLen >>> 16) & 255, (bitLen >>> 8) & 255, bitLen & 255);
+  for (let i = 0; i < bytes.length; i += 64) {
+    const w = new Array(64);
+    for (let t = 0; t < 16; t++) w[t] = (bytes[i+4*t] << 24) | (bytes[i+4*t+1] << 16) | (bytes[i+4*t+2] << 8) | bytes[i+4*t+3];
+    for (let t = 16; t < 64; t++) {
+      const s0 = rotr(w[t-15], 7) ^ rotr(w[t-15], 18) ^ (w[t-15] >>> 3);
+      const s1 = rotr(w[t-2], 17) ^ rotr(w[t-2], 19) ^ (w[t-2] >>> 10);
+      w[t] = (w[t-16] + s0 + w[t-7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let t = 0; t < 64; t++) {
+      const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[t] + w[t]) | 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    [a, b, c, d, e, f, g, h].forEach((v, k) => { H[k] = (H[k] + v) | 0; });
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+function onUnlocked() {
+  if (sheetUrl) {
+    // pullFromSheet pushes any unsynced local changes first, so they aren't overwritten
+    pullFromSheet().then(pulled => { if (pulled) renderAll(); });
+  } else if (!localStorage.getItem('fc_setup_seen')) {
+    document.getElementById('setupOverlay').style.display = 'flex';
+    localStorage.setItem('fc_setup_seen', '1');
+  } else {
+    setSyncStatus('Offline mode — tap ⚙️ to connect Google Sheets');
+  }
+}
 
 // ---- Wedding Fund ----
 const W_TARGET = 2150000; // ₹21,50,000
@@ -358,13 +464,15 @@ let wCur = 'INR';
 
 function setWCur(cur) {
   wCur = cur;
+  try { localStorage.setItem('fc_wedding_cur', cur); } catch (e) {}
   document.getElementById('wBtnINR').classList.toggle('active', cur === 'INR');
   document.getElementById('wBtnUSD').classList.toggle('active', cur === 'USD');
-  // Update amount placeholder to match selected currency
-  const cat = document.getElementById('aeCat')?.value;
-  if (cat === 'Wedding') {
-    document.getElementById('aeAmount').placeholder = cur === 'INR' ? '₹0' : '$0';
-  }
+  updateAmountPlaceholder();
+}
+
+function updateAmountPlaceholder() {
+  const cat = document.getElementById('aeCat').value;
+  document.getElementById('aeAmount').placeholder = (cat === 'Wedding' && wCur === 'INR') ? '₹0' : '$0';
 }
 
 function fmtINR(n) {
@@ -378,7 +486,7 @@ function fmtINR(n) {
 
 function updateWedding() {
   const rate = parseFloat(document.getElementById('weddingRate')?.value) || 95.14;
-  localStorage.setItem('fc_wedding_rate', rate);
+  try { localStorage.setItem('fc_wedding_rate', rate); } catch (e) {}
   let spentINR = 0;
   for (const [y, m] of ALL_PERIODS) {
     const entries = customEntries[getEntryKey(y, m)] || [];
@@ -388,12 +496,35 @@ function updateWedding() {
   }
   const remaining = Math.max(0, W_TARGET - spentINR);
   const pct = Math.min(100, spentINR / W_TARGET * 100).toFixed(1);
-  const rEl = document.getElementById('weddingRemaining');
-  const sEl = document.getElementById('weddingSpent');
-  const pEl = document.getElementById('weddingPct');
-  if (rEl) rEl.textContent = fmtINR(remaining);
-  if (sEl) sEl.textContent = fmtINR(spentINR);
-  if (pEl) pEl.textContent = pct + '%';
+  document.getElementById('weddingRemaining').textContent = fmtINR(remaining);
+  document.getElementById('weddingSpent').textContent = fmtINR(spentINR);
+  document.getElementById('weddingPct').textContent = pct + '%';
+}
+
+// ---- Emergency Fund ----
+// Saved = checked "HYSA (Emergency Fund)" items + every HS (Emergency Fund) entry, across all months.
+function updateEmergencyFund() {
+  let saved = 0;
+  ALL_ITEMS.filter(i => i.ef && checked.has(i.id)).forEach(i => { saved += getAmount(i.id, i.amount); });
+  for (const list of Object.values(customEntries)) {
+    (list || []).filter(e => e.category === EF_CAT).forEach(e => { saved += e.amount; });
+  }
+
+  // When will the plan reach the target? Walk months in order, adding planned (checked or not) deposits.
+  let planned = 0, eta = 'After Dec 2027';
+  for (const [y, m] of ALL_PERIODS) {
+    planned += getMonthItems(y, m).filter(i => i.ef).reduce((s, i) => s + getAmount(i.id, i.amount), 0);
+    planned += (customEntries[getEntryKey(y, m)] || []).filter(e => e.category === EF_CAT).reduce((s, e) => s + e.amount, 0);
+    if (planned >= EF_TARGET) { eta = MONTHS[m - 1].slice(0, 3) + ' ' + y; break; }
+  }
+  if (saved >= EF_TARGET) eta = 'Reached 🎉';
+
+  const pct = Math.min(100, saved / EF_TARGET * 100);
+  document.getElementById('efSaved').textContent = fmt(saved);
+  document.getElementById('efPct').textContent = pct.toFixed(1) + '%';
+  document.getElementById('efRemaining').textContent = fmt(Math.max(0, EF_TARGET - saved));
+  document.getElementById('efEta').textContent = eta;
+  document.getElementById('efBar').style.width = pct + '%';
 }
 
 // ---- Load from localStorage first ----
@@ -403,6 +534,8 @@ function loadLocal() {
   try { customAmounts = JSON.parse(localStorage.getItem('fc_amounts')||'{}'); } catch(e){}
   try { customEntries = JSON.parse(localStorage.getItem('fc_entries')||'{}'); } catch(e){}
   sheetUrl = localStorage.getItem('fc_sheet_url') || '';
+  pendingSync = localStorage.getItem('fc_pending') === '1';
+  setWCur(localStorage.getItem('fc_wedding_cur') === 'USD' ? 'USD' : 'INR');
 }
 
 function saveLocal() {
@@ -413,6 +546,11 @@ function saveLocal() {
   } catch(e){}
 }
 
+function setPending(v) {
+  pendingSync = v;
+  try { v ? localStorage.setItem('fc_pending', '1') : localStorage.removeItem('fc_pending'); } catch (e) {}
+}
+
 // ---- Google Sheets Sync ----
 function setSyncStatus(msg, type='') {
   const el = document.getElementById('syncStatus');
@@ -420,62 +558,97 @@ function setSyncStatus(msg, type='') {
   el.className = 'sync-status' + (type ? ' '+type : '');
 }
 
+function syncErrorText(data) {
+  if (data && data.message === 'Unauthorized') return 'Sheets rejected the PIN — check APP_PIN in Apps Script';
+  if (data && data.message === 'Locked') return 'Too many wrong PINs — Sheets locked for 15 min';
+  return 'Sync failed — saved locally, will retry';
+}
+
 function jsonp(url) {
   return new Promise((resolve, reject) => {
-    const cb = 'cb_' + Date.now();
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
     const script = document.createElement('script');
-    window[cb] = (data) => { delete window[cb]; document.body.removeChild(script); resolve(data); };
-    script.onerror = () => { delete window[cb]; document.body.removeChild(script); reject(new Error('JSONP failed')); };
+    const cleanup = () => { delete window[cb]; script.remove(); clearTimeout(timer); };
+    const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 20000);
+    window[cb] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('JSONP failed')); };
     script.src = url + (url.includes('?')?'&':'?') + 'callback=' + cb;
     document.body.appendChild(script);
   });
 }
 
+// Writes go in a POST body, so there's no URL length limit no matter how much data you have.
+// text/plain avoids a CORS preflight, which Apps Script can't answer.
 async function pushToSheet() {
-  if (!sheetUrl) return;
+  if (!sheetUrl || !appPin) return false;
+  if (!navigator.onLine) {
+    setPending(true);
+    setSyncStatus('Offline — changes saved locally', 'error');
+    return false;
+  }
   try {
     setSyncStatus('Syncing...', 'syncing');
-    const payload = {
-      fc_checked: [...checked],
-      fc_amounts: customAmounts,
-      fc_entries: customEntries
-    };
-    // Encode payload as URL param and use JSONP (works cross-origin)
-    const encoded = encodeURIComponent(JSON.stringify(payload));
-    const data = await jsonp(sheetUrl + '?action=write&token=' + SECRET_TOKEN + '&payload=' + encoded);
+    const res = await fetch(sheetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        pin: appPin,
+        fc_checked: [...checked],
+        fc_amounts: customAmounts,
+        fc_entries: customEntries,
+        items: ALL_ITEMS // so the Sheet tabs always use the same IDs and labels as the app
+      })
+    });
+    const data = await res.json();
     if (data && data.status === 'ok') {
-      setSyncStatus('Synced ' + new Date().toLocaleTimeString(), 'synced');
-    } else {
-      setSyncStatus('Sync failed — data saved locally', 'error');
-    }
-  } catch(e) {
-    setSyncStatus('Sync failed — data saved locally', 'error');
-  }
-}
-
-async function pullFromSheet() {
-  if (!sheetUrl) return false;
-  try {
-    setSyncStatus('Loading from Sheets...', 'syncing');
-    const data = await jsonp(sheetUrl);
-    if (data && data.status === 'ok' && data.data) {
-      const d = data.data;
-      if (d.fc_checked) checked = new Set(Array.isArray(d.fc_checked) ? d.fc_checked : JSON.parse(d.fc_checked));
-      if (d.fc_amounts) customAmounts = typeof d.fc_amounts === 'object' ? d.fc_amounts : JSON.parse(d.fc_amounts);
-      if (d.fc_entries) customEntries = typeof d.fc_entries === 'object' ? d.fc_entries : JSON.parse(d.fc_entries);
-      saveLocal();
+      setPending(false);
       setSyncStatus('Synced ' + new Date().toLocaleTimeString(), 'synced');
       return true;
     }
-  } catch(e) {
-    setSyncStatus('Could not reach Sheets — using local data', 'error');
+    setPending(true);
+    setSyncStatus(syncErrorText(data), 'error');
+    return false;
+  } catch (e) {
+    setPending(true);
+    setSyncStatus('Sync failed — saved locally, will retry', 'error');
+    return false;
   }
-  return false;
+}
+
+// Returns true if the Sheet had data and it was loaded into the app.
+async function pullFromSheet() {
+  if (!sheetUrl || !appPin) return false;
+  // Never overwrite unsynced local changes: push them first, and stop if that fails.
+  if (pendingSync) {
+    const pushed = await pushToSheet();
+    if (!pushed) return false;
+  }
+  try {
+    setSyncStatus('Loading from Sheets...', 'syncing');
+    const data = await jsonp(sheetUrl + '?action=read&pin=' + encodeURIComponent(appPin));
+    if (!data || data.status !== 'ok') { setSyncStatus(syncErrorText(data), 'error'); return false; }
+    const d = data.data || {};
+    if (!d.fc_checked && !d.fc_amounts && !d.fc_entries) {
+      // Empty Sheet (first connect): upload what's on this device instead.
+      await pushToSheet();
+      return false;
+    }
+    if (d.fc_checked) checked = new Set(Array.isArray(d.fc_checked) ? d.fc_checked : JSON.parse(d.fc_checked));
+    if (d.fc_amounts) customAmounts = typeof d.fc_amounts === 'object' ? d.fc_amounts : JSON.parse(d.fc_amounts);
+    if (d.fc_entries) customEntries = typeof d.fc_entries === 'object' ? d.fc_entries : JSON.parse(d.fc_entries);
+    saveLocal();
+    setSyncStatus('Synced ' + new Date().toLocaleTimeString(), 'synced');
+    return true;
+  } catch (e) {
+    setSyncStatus('Could not reach Sheets — using local data', 'error');
+    return false;
+  }
 }
 
 function schedulePush() {
   saveLocal();
   if (!sheetUrl) return;
+  setPending(true); // cleared only when a push actually succeeds
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(pushToSheet, 1500); // debounce 1.5s
 }
@@ -486,6 +659,7 @@ async function manualSync() {
     document.getElementById('setupOverlay').style.display = 'flex';
     return;
   }
+  clearTimeout(syncTimeout);
   await pullFromSheet();
   renderAll();
 }
@@ -505,8 +679,7 @@ async function connectSheet() {
   localStorage.setItem('fc_sheet_url', url);
   document.getElementById('setupOverlay').style.display = 'none';
   setSyncStatus('Connecting...', 'syncing');
-  const pulled = await pullFromSheet();
-  if (!pulled) await pushToSheet(); // first push if sheet is empty
+  await pullFromSheet(); // uploads this device's data if the Sheet is empty
   renderAll();
 }
 
@@ -548,7 +721,7 @@ function setYear(y) {
   renderAll();
 }
 function setMonth(m) { curMonth=m; renderAll(); }
-function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); updateWedding(); }
+function renderAll() { renderTabs(); renderCalendar(); renderSummary(); renderBreakdown(); renderAddBox(); updateWedding(); updateEmergencyFund(); }
 
 function renderTabs() {
   const tabs = document.getElementById('monthTabs');
@@ -566,7 +739,7 @@ function getCumulative(cat) {
     if (y>curYear||(y===curYear&&m>curMonth)) break;
     const items=getMonthItems(y,m), entries=getMonthEntries(y,m);
     const catItems=items.filter(i=>i.category===cat);
-    const entryItems=entries.filter(e=>e.category===cat);
+    const entryItems=entries.filter(e=>inCat(e.category,cat));
     total += catItems.reduce((s,i)=>s+getAmount(i.id,i.amount),0)+entryItems.reduce((s,e)=>s+e.amount,0);
     checkedTotal += catItems.filter(i=>checked.has(i.id)).reduce((s,i)=>s+getAmount(i.id,i.amount),0)+entryItems.reduce((s,e)=>s+e.amount,0);
   }
@@ -585,14 +758,11 @@ function getTotalHYSA() {
   let balance = 0;
   for (const [y,m] of ALL_PERIODS) {
     if (y>curYear||(y===curYear&&m>curMonth)) break;
-    // Add this month's High Savings
     const items = getMonthItems(y,m);
     balance += items.filter(i=>i.category==='High Savings').reduce((s,i)=>s+getAmount(i.id,i.amount),0);
-    // Add custom High Savings entries for this month
     const key = getEntryKey(y,m);
     const monthOwn = customEntries[key] || [];
-    balance += monthOwn.filter(e=>e.category==='High Savings').reduce((s,e)=>s+e.amount,0);
-    // Subtract only THIS month's withdrawals
+    balance += monthOwn.filter(e=>inCat(e.category,'High Savings')).reduce((s,e)=>s+e.amount,0);
     balance -= monthOwn.filter(e=>e.category==='Withdrawals').reduce((s,e)=>s+e.amount,0);
   }
   return balance;
@@ -622,6 +792,7 @@ function renderSummary() {
   const netEl=document.getElementById('net-hysa');
   netEl.textContent=(netHYSA<0?'-':'')+fmt(netHYSA);
   netEl.style.color=netHYSA<0?'#C0392B':'#2E7D32';
+  updateEmergencyFund();
 }
 
 function renderBreakdown() {
@@ -667,16 +838,16 @@ function renderCalendar() {
     // Sort Chase C to top
     const sorted = [...dayItems].sort((a,b) => (b.id.endsWith('_Chase_C')?1:0)-(a.id.endsWith('_Chase_C')?1:0));
     const rows=sorted.map(it=>{
-      const catClass='cat-'+it.category.replace(' ','-');
       if(it.id.endsWith('_Chase_C')){
         return `<div class="item-row ${checked.has(it.id)?'checked':''}" data-id="${it.id}" onclick="toggleItem('${it.id}')" style="justify-content:center;text-align:center;background:#FFF8E1;border-left:3px solid #F59E0B;">
           <div class="cb-wrap"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <div style="flex:1;text-align:center;font-weight:700;font-size:14px;color:#92400E;">${it.label}</div>
         </div>`;
       }
+      const badge = it.ef ? `<span class="item-cat-badge cat-EF">Emergency Fund</span>` : `<span class="item-cat-badge ${catClass(it.category)}">${it.category}</span>`;
       return `<div class="item-row ${checked.has(it.id)?'checked':''}" data-id="${it.id}" onclick="toggleItem('${it.id}')">
         <div class="cb-wrap"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="item-info"><div class="item-label">${it.label}</div><span class="item-cat-badge ${catClass}">${it.category}</span></div>
+        <div class="item-info"><div class="item-label">${it.label}</div>${badge}</div>
         <div class="item-amount" onclick="openModal(event,'${it.id}')">${fmt(getAmount(it.id,it.amount))}</div>
       </div>`;
     }).join('');
@@ -717,13 +888,13 @@ function renderAddBox(){
   document.getElementById('addEntryMonth').textContent=MONTHS[curMonth-1]+' '+curYear;
   const entries=getMonthEntries(curYear,curMonth);
   document.getElementById('addEntryList').innerHTML=entries.length === 0 ? '' : entries.map((e,i)=>{
-    const catClass='cat-'+e.category.replace(' ','-'), isWd=e.category==='Withdrawals';
+    const isWd=e.category==='Withdrawals';
     const carriedOver = e._fromMonth;
     const fromLabel = carriedOver ? ` <span style="font-size:9px;color:#999;font-weight:400">↩ from ${MONTHS[parseInt(e._fromMonth.split('_')[1])-1]}</span>` : '';
     return `<div class="add-entry-item ${isWd?'ae-withdrawal':''}">
       <div class="ae-label">${e.label}${fromLabel}</div>
-      <span class="ae-badge ${catClass}">${e.category}</span>
-      <div class="ae-amt" style="${!isWd?'color:'+CAT_COLORS[e.category]:''}">${e.category==='Wedding'&&e.amtINR ? fmtINR(e.amtINR) : fmt(e.amount)}</div>
+      <span class="ae-badge ${catClass(e.category)}">${e.category}</span>
+      <div class="ae-amt" style="${!isWd?'color:'+(CAT_COLORS[e.category]||'#1C1C1C'):''}">${e.category==='Wedding'&&e.amtINR ? fmtINR(e.amtINR) : fmt(e.amount)}</div>
       <button class="ae-del" onclick="deleteEntry(${i})" title="${carriedOver?'Remove this withdrawal':'Remove'}">×</button>
     </div>`;
   }).join('');
@@ -736,7 +907,8 @@ function addEntry(){
   if(!label||isNaN(amount)||amount<=0)return;
   const key=getEntryKey(curYear,curMonth);
   if(!customEntries[key])customEntries[key]=[];
-  const entry = {label,amount,category};
+  // Unique id so deleting removes exactly this entry, even if another has the same label and amount
+  const entry = {id:'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), label, amount, category};
   if(category==='Wedding'){
     const rate=parseFloat(document.getElementById('weddingRate')?.value)||95.14;
     entry.amtINR = wCur==='USD' ? amount*rate : amount;
@@ -745,32 +917,23 @@ function addEntry(){
   customEntries[key].unshift(entry);
   document.getElementById('aeLabel').value='';
   document.getElementById('aeAmount').value='';
-  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown(); updateWedding();
+  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown(); updateWedding(); updateEmergencyFund();
 }
 
 function deleteEntry(idx){
-  const key=getEntryKey(curYear,curMonth);
-  const allEntries = getMonthEntries(curYear, curMonth);
-  const entry = allEntries[idx];
+  const entry = getMonthEntries(curYear, curMonth)[idx];
   if (!entry) return;
-
-  // If it's a carried-over withdrawal, delete from its original month
-  if (entry._fromMonth) {
-    const origEntries = customEntries[entry._fromMonth];
-    if (origEntries) {
-      const origIdx = origEntries.findIndex(e => e.label === entry.label && e.amount === entry.amount && e.category === 'Withdrawals');
-      if (origIdx !== -1) origEntries.splice(origIdx, 1);
-    }
-  } else {
-    if(!customEntries[key])return;
-    // Find actual index in the month's own entries
-    const monthOnly = customEntries[key];
-    const monthIdx = monthOnly.findIndex(e => e.label === entry.label && e.amount === entry.amount && e.category === entry.category);
-    if (monthIdx !== -1) monthOnly.splice(monthIdx, 1);
-  }
-  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown();
+  const list = customEntries[entry._fromMonth || getEntryKey(curYear, curMonth)];
+  if (!list) return;
+  // Match by id; older entries without an id fall back to label/amount/category
+  const pos = entry.id
+    ? list.findIndex(e => e.id === entry.id)
+    : list.findIndex(e => !e.id && e.label === entry.label && e.amount === entry.amount && e.category === entry.category);
+  if (pos !== -1) list.splice(pos, 1);
+  schedulePush(); renderAddBox(); renderSummary(); renderBreakdown(); updateWedding(); updateEmergencyFund();
 }
 
+document.getElementById('aeCat').addEventListener('change', updateAmountPlaceholder);
 document.getElementById('aeLabel').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('aeAmount').focus();});
 document.getElementById('aeAmount').addEventListener('keydown',e=>{if(e.key==='Enter')addEntry();});
 document.addEventListener('keydown',e=>{
@@ -779,6 +942,7 @@ document.addEventListener('keydown',e=>{
 });
 
 // ---- Init ----
+buildPinDots();
 loadLocal();
 const now=new Date(), nowY=now.getFullYear(), nowM=now.getMonth()+1;
 if(nowY===2026&&VALID[2026].includes(nowM)){curYear=2026;curMonth=nowM;}
@@ -787,40 +951,21 @@ document.getElementById('ytab'+curYear).classList.add('active');
 document.getElementById('ytab'+(curYear===2026?2027:2026)).classList.remove('active');
 
 renderAll();
-
-// Auto-pull from sheet on load if URL is set
-if (sheetUrl) {
-  pullFromSheet().then(pulled => { if(pulled) renderAll(); });
-} else if (!localStorage.getItem('fc_setup_seen')) {
-  // First time — show setup
-  document.getElementById('setupOverlay').style.display = 'flex';
-  localStorage.setItem('fc_setup_seen', '1');
-}
-
-// Track offline changes and auto-push when back online
-let pendingSync = false;
+if (pendingSync && sheetUrl) setSyncStatus('Unsynced changes — will sync after PIN', 'error');
+// Syncing starts after the PIN is entered (see onUnlocked), because Sheets needs the PIN.
 
 window.addEventListener('offline', () => {
   setSyncStatus('Offline — changes saved locally', 'error');
-  pendingSync = true;
 });
 
 window.addEventListener('online', () => {
-  if (sheetUrl && pendingSync) {
+  if (sheetUrl && appPin && pendingSync) {
     setSyncStatus('Back online — syncing...', 'syncing');
-    pushToSheet().then(() => { pendingSync = false; });
+    pushToSheet();
   } else {
     setSyncStatus('Back online', 'synced');
   }
 });
-
-// Also set pendingSync if a push fails
-const _origPush = pushToSheet;
-pushToSheet = async function() {
-  if (!navigator.onLine) { pendingSync = true; saveLocal(); setSyncStatus('Offline — changes saved locally', 'error'); return; }
-  try { await _origPush(); pendingSync = false; }
-  catch(e) { pendingSync = true; }
-};
 </script>
 </body>
 </html>
