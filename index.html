@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Financial Calendar 2026-2027</title>
 <style>
   :root {
@@ -208,6 +211,17 @@
   .emi-q b { font-size:15px; }
   .emi-q small { font-size:12px; }
   .emi-status { font-size:11px; }
+  /* ---- Full-screen PIN lock (v10): fills the whole screen and scales with it ---- */
+  .pin-overlay { width:100vw; height:100vh; height:100dvh; padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0); overflow:hidden; }
+  .pin-box { width:100%; max-width:640px; padding:0 5vw; display:flex; flex-direction:column; align-items:center; }
+  .pin-box h2 { font-size:clamp(22px, min(6.5vw, 5vh), 42px); margin-bottom:1.5vh; white-space:nowrap; }
+  .pin-box p { font-size:clamp(15px, 3.6vw, 22px); margin-bottom:5vh; }
+  .pin-dots { gap:clamp(16px, 4vw, 28px); margin-bottom:5vh; }
+  .pin-dot { width:clamp(16px, 4vw, 26px); height:clamp(16px, 4vw, 26px); }
+  .pin-pad { width:100%; gap:clamp(14px, 3vh, 28px) clamp(14px, 6vw, 40px); justify-items:center; }
+  .pin-btn { width:min(24vw, 13vh, 120px); height:min(24vw, 13vh, 120px); font-size:clamp(24px, 4.5vh, 40px); }
+  .pin-btn.del { font-size:clamp(18px, 3.2vh, 30px); }
+  .pin-error { font-size:clamp(14px, 3.2vw, 18px); }
   .emi-note { font-size:12px; color:#8A5A1F; margin-top:8px; }
 </style>
 </head>
@@ -257,7 +271,7 @@
 </div>
 <div class="app-header">
   <div class="header-row">
-    <h1>FINANCIAL CALENDAR <span style="font-size:10px;font-weight:700;color:#C8E6C0;letter-spacing:0;vertical-align:middle">v9</span></h1>
+    <h1>FINANCIAL CALENDAR <span style="font-size:10px;font-weight:700;color:#C8E6C0;letter-spacing:0;vertical-align:middle">v10</span></h1>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="sync-btn" onclick="manualSync()" title="Sync now">
         <span id="syncIcon">☁️</span> Sync
@@ -295,14 +309,13 @@
       </div>
     </div>
     <div class="ef-bar"><div class="ef-bar-fill" id="efBar" style="width:0%"></div></div>
-    <div class="ef-foot">Counts checked "HYSA (Emergency Fund)" deposits (from Nov 2026) + HS (Emergency Fund) entries.</div>
   </div>
 
   <!-- India EMI buffer -->
   <div class="emi-card">
     <div class="ef-top">
       <div>
-        <div class="s-label">🇮🇳 India EMI Buffer · $1,250 on the 10th</div>
+        <div class="s-label">🇮🇳 India EMI Buffer</div>
         <div class="w-sub">Covered through: <strong id="emiCovered">Jan 2027</strong></div>
       </div>
       <div class="ef-right" style="color:#8A5A1F">
